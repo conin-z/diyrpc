@@ -40,9 +40,9 @@ public class RpcClientConfiguration implements RpcConfiguration, BeanDefinitionR
     public static ApplicationContext ioc;
 
     /* ----- ------services ache-related------------- */
-        //*** [key attribute]   ~~ ~ ~~ [2-level ache] ~~ ~ ~~
+        //*** [key attribute]   ~~ ~ ~~ [2-level cache] ~~ ~ ~~
     private Map<String, List<String>> itfServersMap; //aware  :  all servers and their containing services
-        //*** [key attribute]   ~~ ~ ~~ [2-level ache] ~~ ~ ~~
+        //*** [key attribute]   ~~ ~ ~~ [2-level cache] ~~ ~ ~~
     private Set<String> serversList;   //aware:  lists this server lies in
         //*** [assist attribute]
     private Map<String, Set<String>> servicesNameMap; // all servers and their available services in register center
@@ -169,21 +169,21 @@ public class RpcClientConfiguration implements RpcConfiguration, BeanDefinitionR
                     Set<String> servers = RedisListSubscription.getRegisterList(jedis, Constant.REDIS_SERVER_LIST);
                     if (servers != null && servers.size() > 0) {
 
-                        //update 1-level ache [ServerInfo.serversList]
+                        //update 1-level cache [ServerInfo.serversList]
                         Set<String> old = ServerInfo.serversList;
                         ServerInfo.serversList = servers;
                         logger.debug("====== consumer {" + Constant.LOCAL_ADDRESS + "} update serversList successful!");
 
-                        //update ache [ServerInfo.servicesNameMap]
+                        //update cache [ServerInfo.servicesNameMap]
                         ServerInfo.servicesNameMap.clear();
                         for (String server : servers) {
                             Set<String> set = RedisListSubscription.getRegisterList(jedis, server);
                             ServerInfo.servicesNameMap.put(server, set);
                         }
 
-                        // update ache [ServerInfo.itfServersMap]
+                        // update cache [ServerInfo.itfServersMap]
                         Set<String> itfSet = ServerInfo.itfServersMap.keySet();  //local @RpcReference serviceItfs
-                        // update ache [ServerInfo.serverChannelMap] & [ServerInfo.itfServersMap]
+                        // update cache [ServerInfo.serverChannelMap] & [ServerInfo.itfServersMap]
                         for (String itf : itfSet) {
 
                             // new servers online  !!!
@@ -205,7 +205,7 @@ public class RpcClientConfiguration implements RpcConfiguration, BeanDefinitionR
                                 }
                             }
                         }
-                        logger.debug("===== local aches updated successful! ========");
+                        logger.debug("===== local caches updated successful! ========");
                         logger.debug("=== online servers:\n " + ServerInfo.serversList);
                         logger.debug("=== online servers and their services:\n " + ServerInfo.servicesNameMap);
                         logger.debug("=== remote services we need and available servers:\n " + ServerInfo.itfServersMap);
