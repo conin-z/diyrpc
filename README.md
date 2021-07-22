@@ -11,35 +11,45 @@ An efficient simple rpc framework which is based on Netty, Redis, Spring.
 
 ----
 
-该项目基于 Spring + Netty + Redis ，实现了一个简单、高效的**远程服务调用**（RPC）框架；另外还考虑了服务的优雅下线。
+该项目基于 Spring + Netty + Redis ，实现了一个简单高效的**远程服务调用**（RPC）框架；另外还考虑了服务的优雅下线。
+
+
+
+- *整个项目周期包含：*
+
+  **模块的设计：**借鉴已有成熟RPC框架的原理和所涉及的功能。从应用层角度来考虑：1. 用户端分为服务提供者与消费者；2. 需要实现两个主要功能：网络通信与服务注册/发现；3. 使用Spring提供的机制灵活管理。
+
+  **技术的选择**：参考已有开源RPC框架，根据项目要求的功能和自身掌握的技术，选取对应一两种方案，不要求技术体系十分完善，如Dubbo框架涵盖了Zookeeper、Redis等多种服务注册/发现方案，但本项目中只使用Redis，利用其提供的方便的数据结构和Jedis客户端来实现相应功能。
+
+  **功能的实现：**
+
+  网络传输模块，使用Netty框架，主要涉及NIO逻辑的封装、JDK方式的动态代理的融合、消息实体的构建、序列化/反序列化和业务处理逻辑的实现；
+
+  服务注册/发现模块，采用Redis作为注册中心，使用JedisPool来保证交互时的线程安全；
+
+  Spring管理模块，主要使用IOC机制和事件传播机制，实现在特定时机既成特定功能；
+
+  服务的优雅下线，使用JDK提供的方法在项目提供的全局配置类中注册JVM关闭钩子，也提供了依托Spring的方式，将下线逻辑实现在由容器主动调用的方法里，在IOC容器关闭时执行。
 
 - *使用到的技术：*
 
-> ​       【NIO技术：Netty】
->
-> ​        【IOC，事件传播：Spring】
->
-> ​       【服务注册中心：Redis】                
->
-> ​       【动态代理】
->
-> ​       【序列化技术：Kryo】   
->
-> ​	   【池化】 本地线程池/Kryo pool ；本地线程池/Jedis pool
+  NIO技术(Netty ) 、Spring、Redis、动态代理、序列化/反序列化 (Kryo)、 池化
 
 - *项目整体分为三大模块：*
 
-> ​	   【服务注册/发现】【网络传输】【Spring管理】
+  服务注册/发现、网络传输、Spring管理
 
 - *服务上下线：*
 
-> 当服务上线时，服务提供者将自己的服务信息注册到注册中心，并通过心跳维持长连接；服务调用者通过订阅服务列表，根据可定制负载均衡算法（或交给cluster层）选择服务，将服务信息缓存在本地以提高性能。当服务下线时，需要考虑优雅下线，文档最后有详细介绍。
->
-> 其中，**服务的上线**由Spring的**事件传播机制**来控制：
->
-> ```java
-> class RpcXxxConfiguration implements ApplicationListener<ContextRefreshedEvent> ..
-> ```
+  当服务上线时，服务提供者将自己的服务信息注册到注册中心，并通过心跳维持长连接；服务调用者通过订阅服务列表，根据可定制负载均衡算法（或交给cluster层）选择服务，将服务信息缓存在本地以提高性能。当服务下线时，需要考虑优雅下线，文档最后有详细介绍。
+
+  其中，**服务的上线**由Spring的**事件传播机制**来控制：
+
+  ```java
+  class RpcXxxConfiguration implements ApplicationListener<ContextRefreshedEvent> ..
+  ```
+
+  
 
 
 
@@ -98,11 +108,11 @@ public class RedisServiceRegistry{
 
 - 从注册中心**订阅服务列表**，**缓存**服务列表，从中获取服务地址
 
-  *时机*：consumer第一次涉及到`getBean()`操作（显式get，隐式get: @Autowired）;
+  *时机*：consumer第一次涉及到`getBean()`操作（显式get，隐式get）;
 
 - 根据地址与provider**建立连接**，并**缓存**连接信息
 
-  *时机*：consumer第一次涉及到`getBean()`操作（显式get，隐式get: @Autowired）;
+  *时机*：consumer第一次涉及到`getBean()`操作（显式get，隐式get）;
 
 - **动态代理**来发送请求，使用“应用层协议”`RequestImpl`**包装请求**，实现服务调用
 
@@ -112,13 +122,13 @@ public class RedisServiceRegistry{
 
   ​		请求信息的包装：每次调用远程服务的方法时。
 
-  
+  *涉及的API：*
 
-  涉及的API有：![20210718183331](C:\Users\zky\Desktop\image\QQ图片20210718183331.png)![image-20210718183508331](C:\Users\zky\AppData\Roaming\Typora\typora-user-images\image-20210718183508331.png)
+  ![20210718183331](C:\Users\zky\Desktop\image\QQ图片20210718183331.png)![image-20210718183508331](C:\Users\zky\AppData\Roaming\Typora\typora-user-images\image-20210718183508331.png)
 
 
 
-从consumer调用的角度看，分为两步：**远程服务的 识别 与 代理：**
+从consumer调用的角度看，分为：**远程服务的识别 、缓存与 代理：**
 
 - **识别**
 
@@ -164,6 +174,37 @@ public class RedisServiceRegistry{
   }
   ```
 
+- **缓存**
+
+  主要由ServerInfo来管理；主要数据结构为 `ConcurrentHashMap`；
+
+  服务调用期间会涉及到缓存的刷新、更新、清除；
+
+  ```java
+public class ServerInfo {
+  
+      public static Boolean isInit = false;
+  
+      public static Map<String, Set<String>> itfServersMap = new ConcurrentHashMap();
+      public static Map<String, Boolean> itfServersMapState = new ConcurrentHashMap();
+      public static Set<String> serversList = new HashSet();  
+      public static Map<String, Set<String>> servicesNameMap = new ConcurrentHashMap(); 
+      public static Map<String, Channel> serverChannelMap = new ConcurrentHashMap(); 
+      // request<-K,V->responses queue   // requestID<-K,V->responses
+      public static Map<String, SynchronousQueue<ResponseImpl>> msgTransferMap = new ConcurrentHashMap(); 
+  
+      public static void clear(){
+          serversList.clear();
+          serverChannelMap.clear();
+          itfServersMap.clear();
+          itfServersMapState.clear();
+          servicesNameMap.clear();
+          msgTransferMap.clear();
+      }
+  
+  }
+  ```
+  
 - **代理**
 
   *时机：* 创建bean时，便创建代理对象；consumer调用方法时，启动远程调用逻辑；
@@ -206,7 +247,7 @@ public class RedisServiceRegistry{
 
 #### Redis相关配置
 
-项目基于Jedis客户端，用到了`JdeisPool`来保证线程安全；
+项目基于Jedis客户端，用到了`JedisPool`来保证线程安全；
 
 *API：*
 
@@ -231,7 +272,7 @@ public class RedisRegistCenterConfig{
     // ...
 ```
 
-- 保存JdeisPool的配置参数，连接参数，
+- 保存JedisPool的配置参数，连接参数，
 - 可通过`set()`方法设置相关参数 
 - 默认端口号*6379*
 
@@ -241,15 +282,13 @@ public class RedisRegistCenterConfig{
 
 ```java
 server_lists  ---  "$iP1$::$port1$" "$iP2$::$port2$" ...
-192.168.0.0.1::8989 --- "xx.xx.Service1" "xx.xx.Service2"...
-192.168.0.0.2::8988 --- "xx.xx.Service1" "xx.xx.Service2"...
+192.168.0.1::8989 --- "xx.xx.Service1" "xx.xx.Service2"...
+192.168.0.2::8988 --- "xx.xx.Service1" "xx.xx.Service2"...
 ```
 
 *命令：*
 
 ​		主要涉及`ADD` /`SMEMBERS` /`DEL` /`SREM`
-
-
 
 
 
@@ -326,7 +365,7 @@ class InvokeHandler extends ChannelInboundHandlerAdapter {
     public void channelRead(ChannelHandlerContext ctx, Object msg){            
         if(request.getMessageType() == MessageType.HEARTBEAT){
             //pong 发送心跳包  "i'm alive"
-        }else if(request.getMessageType()==MessageType.SERVER){
+        }else if(request.getMessageType() == MessageType.SERVER){
             //读取msg，处理调用，封装结果，发送响应信息；
         }
     }
@@ -382,8 +421,6 @@ class KryoUtil{
 	public static <T> T readFromByteArray(ByteBuf byteArray) {/* .. */};
 }
 ```
-
-
 
 
 
@@ -623,6 +660,7 @@ public void destroy() {
     if (timer != null) { timer.cancel();}
     disconnect(); 
     if (socketConfig != null) { socketConfig.close(); } 
+    ServerInfo.clear();
 }
 
 private void disconnect() {
