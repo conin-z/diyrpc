@@ -167,7 +167,7 @@ public class RedisServiceRegistry{
       boolean isCandidateComponent(AnnotatedBeanDefinition beanDefinition){
           AnnotationMetadata metadata = beanDefinition.getMetadata(); 
    //distinguish here
-          return metadata.hasAnnotation("com.rpc.annotations.RpcReference") &&
+          return metadata.hasAnnotation("com.rpc.annotation.RpcReference") &&
                   metadata.isInterface() && metadata.isIndependent();  
       }
       
@@ -526,7 +526,7 @@ public class RpcItfScanner extends ClassPathBeanDefinitionScanner {
     
     protected boolean isCandidateComponent(AnnotatedBeanDefinition beanDefinition) {
         AnnotationMetadata metadata = beanDefinition.getMetadata(); 
-        return metadata.hasAnnotation("com.rpc.annotations.RpcReference") &&
+        return metadata.hasAnnotation("com.rpc.annotation.RpcReference") &&
                 metadata.isInterface() && metadata.isIndependent();  
         // default: (metadata.isIndependent() && (metadata.isConcrete()||(metadata.isAbstract() && metadata.hasAnnotatedMethods(Lookup.class.getName()))));
     }

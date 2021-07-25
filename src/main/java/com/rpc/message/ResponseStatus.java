@@ -9,6 +9,6 @@ package com.rpc.message;
  */
 public enum ResponseStatus{
 
-    OK,ERROR;
+    OK, ERROR
 
 }

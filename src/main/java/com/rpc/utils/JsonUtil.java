@@ -8,7 +8,6 @@ import java.io.UnsupportedEncodingException;
  * @user KyZhang
  * @date
  */
-@Deprecated
 public class JsonUtil{
 
 
@@ -55,9 +54,7 @@ public class JsonUtil{
      * @return
      */
     public static String pojoToJson(Object obj) {
-        //String json = new Gson().toJson(obj);
         String json = JSONObject.toJSONString(obj);
-                //gson.toJson(obj);
         return json;
     }
 

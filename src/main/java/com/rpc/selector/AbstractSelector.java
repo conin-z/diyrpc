@@ -2,8 +2,6 @@ package com.rpc.selector;
 
 import com.rpc.message.RequestImpl;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
 /**

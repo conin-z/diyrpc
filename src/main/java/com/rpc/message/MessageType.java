@@ -8,6 +8,5 @@ package com.rpc.message;
  */
 public enum MessageType {
 
-    SERVER,HEARTBEAT,DISCONNECT;
-
+    SERVER, HEARTBEAT, DISCONNECT;
 }

@@ -1,6 +1,5 @@
 package com.rpc.utils;
 
-import com.rpc.constant.Constant;
 import io.netty.handler.timeout.IdleStateEvent;
 
 /**
@@ -10,7 +9,7 @@ import io.netty.handler.timeout.IdleStateEvent;
 public class StringUtil {
 
     /**
-     * convert "127.0.0.1::10086" to {"127.0.0.1","10086"}
+     * such as : convert "127.0.0.1::10086" to {"127.0.0.1","10086"}
      *
      * @param server
      * @return
