@@ -16,6 +16,7 @@ public class ScheduleSubscribeTimerTask extends AbstractTimerTask {
     public void run() {
         ServerInfo.isRefreshed = false;
         try {
+            logger.debug("===== scheduled task for subscription is to begin... =====");
             ServerInfo.refresh();
         } catch (AppException e) {
             logger.warn(e.getMessage());

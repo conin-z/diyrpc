@@ -33,12 +33,8 @@ public class RedisServiceRegistry implements ServiceRegistry{
     public void keepAlive(int seconds) {
         checkPool();
         try(Jedis jedis = pool.getResource()) {
-            Long expire = jedis.expire(Constant.LOCAL_ADDRESS, seconds+1);
-            if(expire > 0){
-                logger.debug("====== server {" + Constant.LOCAL_ADDRESS + "} send expire command successful!");
-            } else {
-                logger.warn("== server {" + Constant.LOCAL_ADDRESS + "} send expire command error!");
-            }
+            jedis.expire(Constant.LOCAL_ADDRESS, seconds+1);
+            logger.debug("====== server {" + Constant.LOCAL_ADDRESS + "} send expire command successful!");
         }
     }
 

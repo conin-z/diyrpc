@@ -1,6 +1,7 @@
 package com.rpc.timertask;
 
 import com.rpc.provider.registry.ServiceRegistry;
+import org.apache.log4j.Logger;
 
 
 /**
@@ -8,6 +9,8 @@ import com.rpc.provider.registry.ServiceRegistry;
  * can be inherited
  */
 public class ExpireTimerTask extends AbstractTimerTask {
+
+    private static final Logger logger = Logger.getLogger(ExpireTimerTask.class);
 
     private ServiceRegistry registry;
     private int expireSeconds;
@@ -19,6 +22,7 @@ public class ExpireTimerTask extends AbstractTimerTask {
 
     @Override
     public void run() {
+        logger.debug("===== scheduled task for keep heartbeat with register center is to begin... =====");
         registry.keepAlive(expireSeconds);
     }
 

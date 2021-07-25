@@ -3,22 +3,21 @@ package com.rpc.consumer.proxy;
 import com.rpc.consumer.RpcClientConfiguration;
 import com.rpc.exception.AppException;
 import com.rpc.consumer.ServerInfo;
-import com.rpc.consumer.subscriber.ServiceSubscriber;
+import com.rpc.provider.RpcServerConfiguration;
+import org.apache.log4j.Logger;
 import org.springframework.beans.factory.FactoryBean;
 
 import java.lang.reflect.Proxy;
 
-import java.util.HashSet;
-import java.util.Set;
-
 /**
  * associated with one Class<T> one serviceItf
- * associated with one 'RedisListSubscription'
  * 
  * @user KyZhang
  * @date
  */
 public class RpcInterfaceProxyFactoryBean<T> implements FactoryBean {
+
+    private static final Logger logger = Logger.getLogger(RpcInterfaceProxyFactoryBean.class);
 
     private Class<T> itfClass;
 
@@ -50,6 +49,7 @@ public class RpcInterfaceProxyFactoryBean<T> implements FactoryBean {
 
     private void checkCandidatesForItf() throws AppException {
         if(!ServerInfo.isInit){
+            logger.debug("=============== begin to initialize local caches... ");
             ServerInfo.refresh();
             ServerInfo.isInit = true;
         }

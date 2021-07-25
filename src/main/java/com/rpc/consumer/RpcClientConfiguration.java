@@ -113,9 +113,11 @@ public class RpcClientConfiguration implements RpcConfiguration, BeanDefinitionR
     public void onApplicationEvent(ContextRefreshedEvent event) {
         if(!ServerInfo.isInit){
             try {
+                logger.debug("=============== begin to initialize local caches after contextRefreshedEvent... ");
                 ServerInfo.refresh();
                 ServerInfo.isInit = true;
             } catch (AppException e) {
+                logger.debug("========== fail to initialize the local cache! ========= ");
                 logger.warn("=============== fail to start Spring ioc, since: \n" + e.getMessage());
                 ((GenericApplicationContext)ioc).close();
                 return;
@@ -127,7 +129,7 @@ public class RpcClientConfiguration implements RpcConfiguration, BeanDefinitionR
         if (this.timerTask == null) {
             timerTask = new ScheduleSubscribeTimerTask();
         }
-        timer.scheduleAtFixedRate(timerTask, synSubscriptSeconds*1000, synSubscriptSeconds*1000);
+        timer.scheduleAtFixedRate(timerTask, synSubscriptSeconds*3000, synSubscriptSeconds*1000);
         logger.debug("=============== Spring ioc started, and the timer task begin to run ===============");
     }
 
