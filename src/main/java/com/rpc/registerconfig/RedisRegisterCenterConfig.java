@@ -99,7 +99,7 @@ public class RedisRegisterCenterConfig implements RegisterCenterConfig {
                 config.setTestOnReturn(testOnReturn);
                 // instantiation for pool
                 pool = new JedisPool(config, ip, port, timeout, password);
-                logger.debug("====== redis connection success! ======");
+                logger.debug("====== redis initialization is successful! ======");
 
             } catch(Exception e){
                 logger.error("== fail for redis connection! ", e);
@@ -199,5 +199,20 @@ public class RedisRegisterCenterConfig implements RegisterCenterConfig {
 
     public void setJedisConfigPath(String jedisConfigPath) {
         this.jedisConfigPath = jedisConfigPath;
+    }
+
+    @Override
+    public void show() {
+        String info = "================================= status of Jedis pool : \n" +
+                "{ " + pool.getNumActive() + " } ACTIVE JEDIS INSTANCES\n" +
+                "{ " + pool.getNumWaiters() + " } BLOCKED THREADS\n" +
+                "{ " + pool.getNumIdle() + " } ACTIVE JEDIS INSTANCES\n" +
+                "=================================          =================================";
+        logger.info(info);
+    }
+
+    @Override
+    public void alter() {
+
     }
 }

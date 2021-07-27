@@ -1,11 +1,12 @@
 package com.rpc.registerconfig;
 
+import com.rpc.management.RpcStatus;
 
 /**
  * @user KyZhang
  * @date
  */
-public interface RegisterCenterConfig {
+public interface RegisterCenterConfig extends RpcStatus {
 
     int getExpireSeconds();
 

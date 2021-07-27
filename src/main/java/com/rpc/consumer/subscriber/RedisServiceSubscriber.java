@@ -57,11 +57,11 @@ public class RedisServiceSubscriber implements ServiceSubscriber {
                         String server = message;
                         switch (channel){
                             case Constant.ONLINE:
-                                logger.debug("============ received ONLINE message of server {" + message + "} from channel {" + channel + "} ==============");
+                                logger.info("============ received ONLINE message of server {" + message + "} from channel {" + channel + "} ==============");
                                 ServerInfo.addServer(server);
                                 break;
                             case Constant.OFFLINE:
-                                logger.debug("============ received OFFLINE message of server {" + message + "} from channel {" + channel + "} ==============");
+                                logger.info("============ received OFFLINE message of server {" + message + "} from channel {" + channel + "} ==============");
                                 ServerInfo.removeServer(server);
                         }
                     }

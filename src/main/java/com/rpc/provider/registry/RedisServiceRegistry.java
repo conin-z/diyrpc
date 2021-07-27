@@ -1,7 +1,7 @@
 package com.rpc.provider.registry;
 
 import com.rpc.registerconfig.RedisRegisterCenterConfig;
-import com.rpc.provider.RpcServerConfiguration;
+import com.rpc.provider.ServerRpcConfig;
 import com.rpc.utils.Constant;
 import org.apache.log4j.Logger;
 import redis.clients.jedis.Jedis;
@@ -22,7 +22,7 @@ public class RedisServiceRegistry implements ServiceRegistry{
     private static final Logger logger = Logger.getLogger(RedisServiceRegistry.class);
 
     private JedisPool pool;
-    private RpcServerConfiguration server;
+    private ServerRpcConfig server;
 
     public RedisServiceRegistry() {
         this.pool = RedisRegisterCenterConfig.getJedisPool();
@@ -33,8 +33,8 @@ public class RedisServiceRegistry implements ServiceRegistry{
     public void keepAlive(int seconds) {
         checkPool();
         try(Jedis jedis = pool.getResource()) {
-            jedis.expire(Constant.LOCAL_ADDRESS, seconds+1);
-            logger.debug("====== server {" + Constant.LOCAL_ADDRESS + "} send expire command successful!");
+            jedis.expire(Constant.LOCAL_ADDRESS, seconds + 1);
+            logger.info("====== server { " + Constant.LOCAL_ADDRESS + " } send expire command successful!");
         }
     }
 
@@ -43,18 +43,14 @@ public class RedisServiceRegistry implements ServiceRegistry{
     public void lclAddressToRegisterCenter() {
         checkPool();
         try(Jedis jedis = pool.getResource()) {
-            this.server = RpcServerConfiguration.applicationContext.getBean(RpcServerConfiguration.class);
             long num = jedis.sadd(Constant.SERVER_LIST_NAME, Constant.LOCAL_ADDRESS);
             /* ONLINE msg to listener */
             Long listenerNum = jedis.publish(Constant.ONLINE, Constant.LOCAL_ADDRESS);
-            logger.debug("================= send ONLINE msg to listeners of number { " + listenerNum + " } =================");
-            if(null != server && !server.isRegistered()){
-                server.setRegistered(true);
-            }
+            logger.info("================= send ONLINE msg to listeners of number { " + listenerNum + " } =================");
             if(num > 0){
                 logger.debug("register server of { " + Constant.LOCAL_ADDRESS + " } to redis key named {" + Constant.SERVER_LIST_NAME + " }");
             }else {
-                logger.warn("element already a member for redis set");
+                logger.warn("element already a member of the redis set");
             }
         }
 
@@ -76,7 +72,7 @@ public class RedisServiceRegistry implements ServiceRegistry{
                 if(num > 0){
                     logger.debug("service { " + infName + " } of server is published!");
                     if (this.server == null) {
-                        server = RpcServerConfiguration.applicationContext.getBean(RpcServerConfiguration.class);
+                        server = ServerRpcConfig.applicationContext.getBean(ServerRpcConfig.class);
                     }
                 }else {
                     logger.warn("service { " + infName + " } of server already published");
@@ -118,7 +114,7 @@ public class RedisServiceRegistry implements ServiceRegistry{
             res = resource.del(key);
             /* OFFLINE msg to listener */
             Long listenerNum = resource.publish(Constant.OFFLINE, key);
-            logger.debug("================ send OFFLINE msg to listeners of number { " + listenerNum + " }  ===============");
+            logger.info("================ send OFFLINE msg to listeners of number { " + listenerNum + " }  ===============");
         }
         return res;
     }

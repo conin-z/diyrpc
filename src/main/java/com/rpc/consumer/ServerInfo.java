@@ -1,5 +1,6 @@
 package com.rpc.consumer;
 
+import com.rpc.management.RpcStatus;
 import com.rpc.socket.SocketConfig;
 import com.rpc.consumer.subscriber.ServiceSubscriber;
 import com.rpc.utils.Constant;
@@ -13,7 +14,10 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * contains some service-related [caches], socket connection cache, response saved queues;
@@ -22,18 +26,21 @@ import java.util.concurrent.SynchronousQueue;
  * @user KyZhang
  * @date
  */
-public class ServerInfo {
+public class ServerInfo implements RpcStatus {
 
     private static final Logger logger = Logger.getLogger(ServerInfo.class);
 
-    public volatile static Boolean isInit = false;  //open once
+    //public static AtomicBoolean isRefreshed = new AtomicBoolean();
     public volatile static Boolean isRefreshed = false;
+    //public volatile static Boolean isInit = false;
+    public static AtomicBoolean isInit = new AtomicBoolean(); //open once
+    private static AtomicInteger countForRetry = new AtomicInteger();
 
     /*** [key attribute]  // ~~ ~ [1-level cache] ~~ ~ */
     public volatile static Map<String, Set<String>> itfServersMap = new ConcurrentHashMap(); // serviceName<-K,V->servers containing service
     public volatile static Map<String, Boolean> isCandidatesSavedForItfMap = new ConcurrentHashMap();  // the keySet is the list saving remote services
     /*** [key attribute]  // ~~ ~ [2-level cache] ~~ ~ */
-    public volatile static Set<String> serversList = new HashSet();   // aware:  redis set this server lies in : all servers in register center
+    public volatile static Set<String> serversList = new CopyOnWriteArraySet<>();   // aware:  redis set this server lies in : all servers in register center
     private volatile static Set<String> serversListOld;  // for refresh
     public volatile static Map<String, Set<String>> servicesNameMap = new ConcurrentHashMap<String, Set<String>>(); // aware:  serverName<-K,V->services server contains
     /*** [key attribute]  // ~~ ~ [2-level cache for io connection] ~~ ~ */
@@ -50,32 +57,36 @@ public class ServerInfo {
      */
     public static void refresh() throws AppException{
         Set<String> servers;
-        if (!isRefreshed) {
-            synchronized (isRefreshed) {
+        //if (!isRefreshed) {
+            //synchronized (isRefreshed) {
                 if (!isRefreshed) {
-                    int num = 0;
                     do {
-                        RpcClientConfiguration consumer = RpcClientConfiguration.ioc.getBean(RpcClientConfiguration.class);
-                        consumer.checkSubscriber();
+                        ClientRpcConfig consumer = ClientRpcConfig.applicationContext.getBean(ClientRpcConfig.class);
+                        //consumer.checkSubscriber();
                         ServiceSubscriber subscriber = consumer.getServiceSubscriber();
                         servers = subscriber.getServiceList(Constant.SERVER_LIST_NAME);
                         if (servers != null && servers.size() > 0) {
-                            serversListOld = new HashSet<>(serversList);  // begin: size == 0
-                            serversList.clear();
-                            serversList.addAll(servers);
-                            doRefresh();
-                            isRefreshed = true; // get servers --> init
+                            synchronized (isRefreshed) {
+                                if (!isRefreshed) {
+                                    serversListOld = new HashSet<>(serversList);  // init: size == 0
+                                    serversList.clear(); // reentrantLock
+                                    serversList.addAll(servers);
+                                    doRefresh();
+                                    isRefreshed = true; // get servers --> init
+                                }
+                            }
                             return;
                         } else {
-                            num++;
-                            if (num > Constant.SUBSCRIBE_TIMES) {
+                           countForRetry.addAndGet(1);
+                            if (countForRetry.get() >= Constant.SUBSCRIBE_TIMES) {
+                                countForRetry.compareAndSet(Constant.SUBSCRIBE_TIMES,0);
                                 throw new AppException("============== no service provider in register center! ============");
                             }
                         }
-                    } while (true);  // update 3 times to try update
+                    } while (true);  // 3 times (may by multiple threads concurrently) to try to update
                 }
-            }
-        }
+            //}
+        //}
     }
 
 
@@ -89,14 +100,12 @@ public class ServerInfo {
         /* some servers online (some server will restart)
            for restarted server: consider timestamp to mark or directly think they are all new */
         for (String server : serversList) {
+            serversList.remove(server); // here remove in advance; if valid, will re-add in addServer();
             addServer(server);  // if invalid, remove from register center
         }
 
-        logger.debug("====== consumer {" + Constant.LOCAL_ADDRESS + "} update local Service_Candidate_Caches successful!");
-        logger.debug("\n=========== remote services required and available candidates:\n " + ServerInfo.itfServersMap
-                + "\n=========== online servers in register center:\n " + ServerInfo.serversList
-                + "\n=========== online servers and their available services:\n " + ServerInfo.servicesNameMap);
-
+        logger.info("================================= update local Service_Candidate_Caches successful! ");
+        logger.info(getCacheStatus());
     }
 
 
@@ -113,26 +122,29 @@ public class ServerInfo {
             if (serverChannelMap.get(server).isOpen()) {
                 serverChannelMap.get(server).close();
             }
-            serverChannelMap.remove(server);  // since connection establishment is time-consuming
+            serverChannelMap.remove(server);  // connection establishment is time-consuming
         }
         // the 1-level
         Set<String> itfSet = ServerInfo.isCandidatesSavedForItfMap.keySet(); // get the list of remote service
         for (String itf : itfSet) {
-            ServerInfo.itfServersMap.get(itf).remove(server);
+            itfServersMap.get(itf).remove(server);
         }
     }
 
 
     /**
-     * when refresh cache; or get ONLINE message from event publisher
+     * when refreshing cache; or getting ONLINE message from event publisher;
+     * may not actually add this service candidate for some reason:
+     *          1. invalid provider : no remote service provided
+     *          2. cannot parse corresponding service information correctly
+     *          3. fail to connect
      *
      * @param server
      */
     public static void addServer(String server) {
-        RpcClientConfiguration consumer = RpcClientConfiguration.ioc.getBean(RpcClientConfiguration.class);
-        consumer.checkSocket();
-        consumer.checkSubscriber();
-
+        ClientRpcConfig consumer = ClientRpcConfig.applicationContext.getBean(ClientRpcConfig.class);
+        //consumer.checkSocket();
+        //consumer.checkSubscriber();
         ServiceSubscriber serviceSubscriber = consumer.getServiceSubscriber();
         SocketConfig socketConfig = consumer.getSocketConfig();
 
@@ -144,8 +156,8 @@ public class ServerInfo {
             String[] ipPort = StringUtil.resolveIpPortFromString(server);
             if(ipPort != null && ipPort.length == 2){
                 // connect and if ok, save into channelMap
-                boolean isOpen = socketConfig.connect(ipPort[0], ipPort[1]);
-                if (isOpen) {
+                boolean isDone = socketConfig.connect(ipPort[0], Integer.parseInt(ipPort[1]));
+                if (isDone) {
                     serversList.add(server);
                     servicesNameMap.put(server, services);
                     Set<String> itfSet = isCandidatesSavedForItfMap.keySet();
@@ -165,17 +177,16 @@ public class ServerInfo {
     }
 
 
-    private static void saveCandidateForItf(String candidate, String itfName) {
+    protected static void saveCandidateForItf(String candidate, String itfName) {
         Set<String> services = servicesNameMap.get(candidate);
         if(!itfServersMap.containsKey(itfName)){
-            Set<String> serverListForItf = new HashSet<>();
+            Set<String> serverListForItf = new CopyOnWriteArraySet<>();
             itfServersMap.put(itfName, serverListForItf);
         }
         if(services.contains(itfName)){
             itfServersMap.get(itfName).add(candidate);
         }
     }
-
 
 
     public static void clear(){
@@ -187,5 +198,33 @@ public class ServerInfo {
         msgTransferMap.clear();
     }
 
+
+    /**
+     * with RpcObserver
+     * to show the status of caches at scheduled time
+     */
+    @Override
+    public void show() {
+        logger.info(getCacheStatus());
+    }
+
+    @Override
+    public void alter() {
+
+    }
+
+
+    /**
+     *
+     * @return  local rpc service-related information (caches) provided for consumer
+     */
+    public static String getCacheStatus() {
+        return  "================================= { " + ClientRpcConfig.numRpcServiceNeed.get() + " } rpc service we need, and :\n" +
+                "============= rpc services we need and available candidates :\n" + itfServersMap +
+                "\n============= online servers in register center :\n" + serversList +
+                "\n============= and their containing services :\n" + servicesNameMap +
+                "\n=================================          =================================";
+
+    }
 
 }

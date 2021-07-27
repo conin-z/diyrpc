@@ -1,6 +1,6 @@
 package com.rpc.socket.nettyhandler;
 
-import com.rpc.provider.RpcServerConfiguration;
+import com.rpc.provider.ServerRpcConfig;
 import com.rpc.provider.registry.ServiceRegistry;
 import com.rpc.utils.Constant;
 import com.rpc.message.*;
@@ -12,12 +12,12 @@ import io.netty.handler.timeout.IdleStateEvent;
 import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
 import org.apache.log4j.Logger;
-import org.springframework.context.ApplicationContext;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.concurrent.RejectedExecutionException;
+
 
 /**
  * @user KyZhang
@@ -28,8 +28,9 @@ public class InvokeHandler extends ChannelInboundHandlerAdapter {
 
     private static final Logger logger = Logger.getLogger(InvokeHandler.class);
 
+
     /**
-     * message process and wrap into a instance of ResponseImpl.class for writing
+     * message process and wrap into a instance of class ResponseImpl for writing
      *
      * @param ctx
      * @param msg
@@ -37,23 +38,21 @@ public class InvokeHandler extends ChannelInboundHandlerAdapter {
      */
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-            RequestImpl request = (RequestImpl)msg;
+        RequestImpl request = (RequestImpl)msg;
+        String requestId = request.getRequestId();
+        String clientIp = ctx.channel().remoteAddress().toString();
 
-            if(request.getMessageType() == MessageType.HEARTBEAT){
-                logger.debug("===== received heartbeat successful ======");   //ping
-                ResponseImpl response = new ResponseImpl(request.getRequestId(), ResponseStatus.OK);
-                response.setMessageType(request.getMessageType());
-                ctx.channel().writeAndFlush(response);  //pong  "i'm alive"
-            }else if(request.getMessageType() == MessageType.SERVER){
-                try {
-                    process(ctx,request, RpcServerConfiguration.applicationContext);  //executor
-                } catch (RejectedExecutionException re) {
-                    logger.error("==== server busy error! channel: " + ctx.channel() + "\nRequestMassage: "+request, re);
-                    ResponseImpl response = new ResponseImpl(request.getRequestId(), ResponseStatus.ERROR);
-                    response.setErrorMessage("==== system busy, please try again later!");
-                    ctx.channel().writeAndFlush(response);
-                }
-            }
+        if(request.getMessageType() == MessageType.HEARTBEAT){
+            logger.info("===== received heartbeat successful ======");   //ping
+            ResponseImpl response = new ResponseImpl(requestId, ResponseStatus.OK);
+            response.setMessageType(request.getMessageType());
+            ctx.channel().writeAndFlush(response);  //pong  "i'm alive"
+        }else if(request.getMessageType() == MessageType.SERVER){
+            NettyRequestInfo.requestNumOnHandling.incrementAndGet();
+            NettyRequestInfo.requestMapOnHandling.put(requestId, clientIp);
+            process(ctx, request);
+        }
+
     }
 
     /**
@@ -61,15 +60,12 @@ public class InvokeHandler extends ChannelInboundHandlerAdapter {
      *
      * @param ctx
      * @param request
-     * @param ioc
      */
-    private void process(ChannelHandlerContext ctx, RequestImpl request, ApplicationContext ioc) {
+    private void process(ChannelHandlerContext ctx, RequestImpl request) {
         try {
             Class<?> clz = Class.forName(request.getItfName());
-            Object bean = ioc.getBean(clz);
-            logger.debug("");
+            Object bean = ServerRpcConfig.applicationContext.getBean(clz);
             Method method = clz.getMethod(request.getMethodName(), request.getParaClassTypes());
-
             Object result = method.invoke(bean, request.getArgs());
             Class<?> resultClass = result.getClass();
             // new response
@@ -100,20 +96,31 @@ public class InvokeHandler extends ChannelInboundHandlerAdapter {
                 }
             }
             logger.debug(" ======= new response_result send now =======");
+
             ctx.channel().writeAndFlush(response).addListener((ChannelFutureListener) future -> {
+                String client = future.channel().remoteAddress().toString();
+                String requestId = response.getRequestId();
                 if(future.isSuccess()){
+                    NettyRequestInfo.requestMapHandled.put(requestId, client);
                     logger.debug(" ======= send response successful! =======");
                 }else {
-                    logger.warn("=== fail for sending response!");
-                    ResponseImpl response1 = new ResponseImpl(MessageType.DISCONNECT);   //say bye
-                    response1.setContent(ctx.channel().localAddress() + " will disconnect with you");
-                    response1.setServerName(Constant.LOCAL_ADDRESS);
-                    future.channel().writeAndFlush(response1);
-                    future.channel().close();   // like ChannelFutureListener.CLOSE_ON_FAILURE
-                    /* publish way */
-                    ServiceRegistry registry = RpcServerConfiguration.applicationContext.getBean(RpcServerConfiguration.class).getServiceRegistry();
+                    if(future.isCancelled()){
+                        logger.warn("=== request-handling is cancelled ===");
+                    }else {
+                        NettyRequestInfo.requestMapFailed.put(requestId, client);
+                        logger.warn("=== fail for sending response!");
+                        ResponseImpl response1 = new ResponseImpl(MessageType.DISCONNECT);   //say bye
+                        response1.setContent(ctx.channel().localAddress() + " will disconnect with you");
+                        response1.setServerName(Constant.LOCAL_ADDRESS);
+                        future.channel().writeAndFlush(response1);
+                        future.channel().close();   // like ChannelFutureListener.CLOSE_ON_FAILURE
+                    }
+                    /* publish msg */
+                    ServiceRegistry registry = ServerRpcConfig.applicationContext.getBean(ServerRpcConfig.class).getServiceRegistry();
                     registry.deleteKey(Constant.LOCAL_ADDRESS);
                 }
+                NettyRequestInfo.requestMapOnHandling.remove(requestId);
+                NettyRequestInfo.requestNumOnHandling.decrementAndGet();
             });
         } catch (ClassNotFoundException e) {
             logger.error("== service {" + request.getItfName() + "} not found error!", e);
@@ -146,6 +153,8 @@ public class InvokeHandler extends ChannelInboundHandlerAdapter {
         }
     }
 
+
+
     /**
      * no goodbye
      *
@@ -154,13 +163,18 @@ public class InvokeHandler extends ChannelInboundHandlerAdapter {
      */
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable t){
-        logger.debug("==== will disconnect the channel with" + ctx.channel().remoteAddress() + "====");
+        if(t instanceof RejectedExecutionException){
+            logger.error("==== server busy error! channel: " + ctx.channel());
+            ResponseImpl response = new ResponseImpl("", ResponseStatus.ERROR);
+            response.setErrorMessage("==== system busy, please try again later!");
+            ctx.channel().writeAndFlush(response);
+        }
         ctx.fireExceptionCaught(t);
     }
 
 
     @Override
-    public void userEventTriggered(ChannelHandlerContext ctx,Object evt) throws Exception {
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
         if(evt instanceof IdleStateEvent){
             IdleStateEvent event = (IdleStateEvent) evt;
             IdleState idleState = (event).state();

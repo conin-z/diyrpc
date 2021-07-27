@@ -22,8 +22,6 @@ public class RpcItfScanner extends ClassPathBeanDefinitionScanner
     }
 
 
-    // remote scan interfaces(only information) and ServerInfo
-
     /**
      * scan way;
      * can be changed with other ways such as by service's full name
@@ -49,6 +47,7 @@ public class RpcItfScanner extends ClassPathBeanDefinitionScanner
         return holders;
     }
 
+
     /**
      * for rpc, open interface(api) for a certain service is must;
      *
@@ -58,10 +57,9 @@ public class RpcItfScanner extends ClassPathBeanDefinitionScanner
     @Override
     protected boolean isCandidateComponent(AnnotatedBeanDefinition beanDefinition) {
         AnnotationMetadata metadata = beanDefinition.getMetadata(); //get metadata of this BD
-        // notice here
+        /* default: (metadata.isIndependent() && (metadata.isConcrete()||(metadata.isAbstract() && metadata.hasAnnotatedMethods(Lookup.class.getName())))); */
         return metadata.hasAnnotation("com.rpc.annotation.RpcReference") &&
                 metadata.isInterface() && metadata.isIndependent();  //not dependent on an enclosing class
-        // default: (metadata.isIndependent() && (metadata.isConcrete()||(metadata.isAbstract() && metadata.hasAnnotatedMethods(Lookup.class.getName()))));
     }
 
     private void addFilter(){

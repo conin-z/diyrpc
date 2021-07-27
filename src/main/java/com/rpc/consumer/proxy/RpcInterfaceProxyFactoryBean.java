@@ -1,9 +1,8 @@
 package com.rpc.consumer.proxy;
 
-import com.rpc.consumer.RpcClientConfiguration;
+import com.rpc.consumer.ClientRpcConfig;
 import com.rpc.exception.AppException;
 import com.rpc.consumer.ServerInfo;
-import com.rpc.provider.RpcServerConfiguration;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.FactoryBean;
 
@@ -25,6 +24,7 @@ public class RpcInterfaceProxyFactoryBean<T> implements FactoryBean {
     public RpcInterfaceProxyFactoryBean(Class<T> itfClass) {
         this.itfClass = itfClass;
         if(!ServerInfo.isCandidatesSavedForItfMap.containsKey(itfClass.getName())){
+            ClientRpcConfig.numRpcServiceNeed.incrementAndGet();
             ServerInfo.isCandidatesSavedForItfMap.put(itfClass.getName(), false);
         } // here first collect remote services
     }
@@ -37,21 +37,20 @@ public class RpcInterfaceProxyFactoryBean<T> implements FactoryBean {
      *      * case 2 : no service provider for some remote service in register center
      */
     public T getObject() throws AppException{
-        RpcClientConfiguration consumer = RpcClientConfiguration.ioc.getBean(RpcClientConfiguration.class);
-        consumer.checkSocket();
-        this.checkCandidatesForItf();
-        consumer.checkSubscriber();
-
+        ClientRpcConfig consumer = ClientRpcConfig.applicationContext.getBean(ClientRpcConfig.class);
+        //consumer.checkSocket();
+        checkCandidatesForItf();
+        //consumer.checkSubscriber();
         Object o = Proxy.newProxyInstance(itfClass.getClassLoader(), new Class[]{itfClass}, new ClientProxyInvocation(itfClass));
         return (T)o;
     }
 
 
     private void checkCandidatesForItf() throws AppException {
-        if(!ServerInfo.isInit){
-            logger.debug("=============== begin to initialize local caches... ");
+        if(!ServerInfo.isInit.get()){
+            logger.info("=============== begin to initialize local caches... ");
             ServerInfo.refresh();
-            ServerInfo.isInit = true;
+            ServerInfo.isInit.compareAndSet(false,true);
         }
         String itfName = itfClass.getName();
         if (!ServerInfo.isCandidatesSavedForItfMap.get(itfName)) {

@@ -1,5 +1,6 @@
 package com.rpc.timertask;
 
+import com.rpc.provider.ServerRpcConfig;
 import com.rpc.provider.registry.ServiceRegistry;
 import org.apache.log4j.Logger;
 
@@ -15,8 +16,8 @@ public class ExpireTimerTask extends AbstractTimerTask {
     private ServiceRegistry registry;
     private int expireSeconds;
 
-    public ExpireTimerTask(ServiceRegistry centerConfig, int expireSeconds){
-        this.registry = centerConfig;
+    public ExpireTimerTask(int expireSeconds){
+        this.registry = ServerRpcConfig.applicationContext.getBean(ServerRpcConfig.class).getServiceRegistry();
         this.expireSeconds = expireSeconds;
     }
 

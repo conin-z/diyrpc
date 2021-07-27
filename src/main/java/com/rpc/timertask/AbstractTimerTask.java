@@ -9,7 +9,7 @@ import java.util.TimerTask;
  * @user KyZhang
  * @date
  */
-public abstract class AbstractTimerTask extends TimerTask {
+public abstract class AbstractTimerTask implements Runnable {
 
     @Override
     public abstract void run();

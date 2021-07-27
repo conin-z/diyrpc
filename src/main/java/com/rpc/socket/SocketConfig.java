@@ -1,17 +1,15 @@
 package com.rpc.socket;
 
-import com.rpc.exception.AppException;
-
+import com.rpc.management.RpcStatus;
 
 /**
  * @user KyZhang
  * @date
  */
-public interface SocketConfig {
+public interface SocketConfig extends RpcStatus{
 
-    void serverInit(int port);
-    void clientInit(String ip, int port) throws AppException;
+    void init();
     void close();
-    boolean connect(String ip, String port);
-    
+    boolean connect(final String ip, final int port);
+
 }

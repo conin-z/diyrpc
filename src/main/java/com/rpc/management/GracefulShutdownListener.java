@@ -15,14 +15,12 @@ import org.springframework.context.event.ContextClosedEvent;
  */
 public class GracefulShutdownListener implements ApplicationListener<ContextClosedEvent> {
 
-    private static final Logger logger = Logger.getLogger(GracefulShutdownListener.class);
-
-    RpcConfiguration app;  // consumer or provider
+    protected RpcConfig app;  // consumer or provider
 
     public GracefulShutdownListener() {
     }
 
-    public GracefulShutdownListener(final RpcConfiguration app) {
+    public GracefulShutdownListener(final RpcConfig app) {
         this.app = app;
     }
 

@@ -1,6 +1,6 @@
 package com.rpc.consumer.proxy;
 
-import com.rpc.consumer.RpcClientConfiguration;
+import com.rpc.consumer.ClientRpcConfig;
 import com.rpc.consumer.ServerInfo;
 import com.rpc.selector.RandomServerSelector;
 import com.rpc.selector.ServerSelector;
@@ -14,6 +14,7 @@ import org.apache.log4j.Logger;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.SynchronousQueue;
 
 /**
@@ -33,8 +34,8 @@ public class ClientProxyInvocation implements InvocationHandler {
     public ClientProxyInvocation() {
     }
 
-    public Object invoke(Object proxy, Method method, Object[] args) throws InterruptedException {
-        RpcClientConfiguration consumer = RpcClientConfiguration.ioc.getBean(RpcClientConfiguration.class);
+    public Object invoke(Object proxy, Method method, Object[] args) throws InterruptedException, AppException {
+        ClientRpcConfig consumer = ClientRpcConfig.applicationContext.getBean(ClientRpcConfig.class);
         ServerSelector selector = consumer.getServerSelector();
         if (selector == null) {
             selector = new RandomServerSelector();  // here default
@@ -42,7 +43,8 @@ public class ClientProxyInvocation implements InvocationHandler {
         }
         // new request
         RequestImpl request = new RequestImpl(MessageType.SERVER);
-        request.setRequestId(String.valueOf(System.currentTimeMillis()));
+        //request.setRequestId(String.valueOf(System.currentTimeMillis()));
+        request.setRequestId(UUID.randomUUID().toString());  //
         request.setItf(itfClass);
         request.setItfName(itfClass.getName());
         request.setMethodName(method.getName());
@@ -57,14 +59,15 @@ public class ClientProxyInvocation implements InvocationHandler {
             boolean flag;
             int num = Constant.SERVER_RESELECT_TIMES;
             do {
+
                 flag = send(selector, request);
+
                 if(!flag){
                     logger.warn("=== send error, will select server candidate again to send");
                     num--;
                 }
                 if(num < 0){
-                    logger.error("==== fail to call the method: " + method.getName() + "() ====");
-                    return null;
+                    throw new AppException("==== fail to call the method: " + method.getName() + "() ====");
                 }
             } while (!flag);   // select again
 
@@ -78,6 +81,7 @@ public class ClientProxyInvocation implements InvocationHandler {
 
         } finally {
             ServerInfo.msgTransferMap.remove(request.getRequestId());   // get response
+            ClientRpcConfig.numRpcRequestDone.incrementAndGet();
         }
 
         // several types for response (ERROR, OK)
@@ -117,11 +121,7 @@ public class ClientProxyInvocation implements InvocationHandler {
 
                 int num = Constant.REQUEST_RETRY_TIMES;
                 do {
-                    try {
-                        Thread.sleep(10);
-                    } catch (InterruptedException e) {
-                        logger.warn(e.getMessage());
-                    }
+                    Thread.sleep(10);
                     if (num < 0) {
                         logger.warn("=== The channel {" + channel + "} is not active! will close this server candidate ===");
                         throw new AppException();
@@ -131,14 +131,14 @@ public class ClientProxyInvocation implements InvocationHandler {
                     num--;
                 } while (!channel.isActive());
 
-                logger.debug("== The channel {" + channel + "} is active now");
+                logger.debug("== socket channel {" + channel + "} is active now");
 
                 num = Constant.REQUEST_RETRY_TIMES;
                 ChannelFuture future;
                 do {
                     future = channel.writeAndFlush(request).sync();     // send out
                     if (num < 0) {
-                        logger.warn("== send request error! will close this server candidate");
+                        logger.error("== send request error! will close this server candidate");
                         throw new AppException();
                     } else if (num != Constant.REQUEST_RETRY_TIMES) {
                         logger.warn("== fail for the future of channel {" + channel + "}! will send again!");

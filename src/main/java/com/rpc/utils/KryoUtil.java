@@ -47,7 +47,7 @@ public class KryoUtil {
              * 内部类；
              * 泛型对象； //Gson不支持 会擦除
              * Builder 模式；
-             * 其中部分特性的支持，需要使用者手动设定 Kryo 的某些配置 see /~/
+             * 其中部分特性的支持，需要使用者手动设定 Kryo 的某些配置  /~/
              */
 
             // circular references (otherwise stack overflow)
