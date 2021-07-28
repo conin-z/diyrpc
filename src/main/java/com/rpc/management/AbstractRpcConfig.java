@@ -25,8 +25,8 @@ public abstract class AbstractRpcConfig implements RpcConfig {
     protected volatile Boolean isRegistered = false;
 
     /* ---------- scheduled timer-related ---------- */
-    protected final ScheduledThreadPoolExecutor timer = new ScheduledThreadPoolExecutor(this.corePoolSizeForConcurrentTimer);;
     protected int corePoolSizeForConcurrentTimer = 10;
+    protected ScheduledThreadPoolExecutor timer;
     protected StatusObserver socketObserver =  new StatusObserver(new DefaultRpcStatus());;
     protected StatusObserver registerCenterObserver = new StatusObserver(new DefaultRpcStatus());;
     protected long socketObservePeriod = 60l;
@@ -60,6 +60,7 @@ public abstract class AbstractRpcConfig implements RpcConfig {
 
     @Override
     public void startDefaultTimerTasks() {
+        timer = new ScheduledThreadPoolExecutor(corePoolSizeForConcurrentTimer);
         addTimerTask(registerCenterObserver, centerObserveDelay, centerObservePeriod, TimeUnit.SECONDS);
         addTimerTask(socketObserver, socketObserveDelay, socketObservePeriod, TimeUnit.SECONDS);
         addTimerTask(new StatusObserver(new DefaultRpcStatus()), socketObserveDelay*2, socketObservePeriod*2, TimeUnit.SECONDS);

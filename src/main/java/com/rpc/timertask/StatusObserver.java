@@ -1,6 +1,7 @@
 package com.rpc.timertask;
 
 import com.rpc.management.RpcStatus;
+import org.springframework.lang.NonNull;
 
 /**
  *
@@ -21,7 +22,7 @@ public class StatusObserver extends AbstractTimerTask{
 
     private RpcStatus status;
 
-    public StatusObserver(RpcStatus state){
+    public StatusObserver(@NonNull RpcStatus state){
         this.status = state;
     }
 

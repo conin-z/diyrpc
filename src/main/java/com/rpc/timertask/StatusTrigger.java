@@ -1,6 +1,7 @@
 package com.rpc.timertask;
 
 import com.rpc.management.RpcStatus;
+import org.springframework.lang.NonNull;
 
 /**
  *
@@ -23,7 +24,7 @@ public class StatusTrigger extends AbstractTimerTask {
 
     private RpcStatus status;
 
-    public StatusTrigger(RpcStatus state){
+    public StatusTrigger(@NonNull RpcStatus state){
         this.status = state;
     }
 

@@ -133,11 +133,11 @@ public class ClientRpcConfig extends AbstractRpcConfig implements RpcConfig, Bea
 
     @Override
     public void startDefaultTimerTasks() {
+        super.startDefaultTimerTasks();
         if(cacheRefreshTask == null){
             cacheRefreshTask = new ScheduleSubscribeTimerTask();
         }
         addTimerTask(cacheRefreshTask, synSubscriptSeconds*3, synSubscriptSeconds, TimeUnit.SECONDS);
-        super.startDefaultTimerTasks();
     }
 
 
