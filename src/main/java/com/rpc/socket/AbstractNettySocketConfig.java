@@ -17,11 +17,10 @@ public abstract class AbstractNettySocketConfig implements SocketConfig{
     protected static LoggingHandler loggingHandler;
     protected LogLevel loggingLevel = LogLevel.DEBUG;
 
-
     protected long readerIdleTime = 5l;
     protected long writerIdleTime = 0l;
     protected long allIdleTime = 0l;
-    protected TimeUnit idelStateUnit = TimeUnit.MINUTES;
+    protected TimeUnit idleStateUnit = TimeUnit.MINUTES;
     protected int maxFrameLength = Integer.MAX_VALUE;
     protected int lengthFieldOffset = 0;
     protected int lengthFieldLength = 4;
@@ -50,7 +49,7 @@ public abstract class AbstractNettySocketConfig implements SocketConfig{
                 //*** log ,extends ChannelDuplexHandler
                 pipeline.addLast(loggingHandler);
                 //*** monitoring timeout, extends ChannelDuplexHandler
-                pipeline.addLast(new IdleStateHandler(readerIdleTime, writerIdleTime, allIdleTime, idelStateUnit));
+                pipeline.addLast(new IdleStateHandler(readerIdleTime, writerIdleTime, allIdleTime, idleStateUnit));
                 //*** Sticking/unpacking issues，use DelimiterBasedFrameDecoder
                 pipeline.addLast(new LengthFieldBasedFrameDecoder(maxFrameLength, lengthFieldOffset, lengthFieldLength, lengthAdjustment, initialBytesToStrip));
                 pipeline.addLast(new LengthFieldPrepender(lengthFieldLength));
@@ -121,12 +120,12 @@ public abstract class AbstractNettySocketConfig implements SocketConfig{
         this.allIdleTime = allIdleTime;
     }
 
-    public TimeUnit getIdelStateUnit() {
-        return idelStateUnit;
+    public TimeUnit getIdleStateUnit() {
+        return idleStateUnit;
     }
 
-    public void setIdelStateUnit(TimeUnit idelStateUnit) {
-        this.idelStateUnit = idelStateUnit;
+    public void setIdleStateUnit(TimeUnit idleStateUnit) {
+        this.idleStateUnit = idleStateUnit;
     }
 
     public int getMaxFrameLength() {

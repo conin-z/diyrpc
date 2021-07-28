@@ -25,7 +25,7 @@ public abstract class AbstractRpcConfig implements RpcConfig {
     protected volatile Boolean isRegistered = false;
 
     /* ---------- scheduled timer-related ---------- */
-    protected int corePoolSizeForConcurrentTimer = 10;
+    protected int corePoolSizeForConcurrentTimer = 5;
     protected ScheduledThreadPoolExecutor timer;
     protected StatusObserver socketObserver =  new StatusObserver(new DefaultRpcStatus());;
     protected StatusObserver registerCenterObserver = new StatusObserver(new DefaultRpcStatus());;
