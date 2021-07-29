@@ -1,5 +1,6 @@
 package com.rpc.timertask;
 
+import com.rpc.management.RpcCriterion;
 import com.rpc.management.RpcStatus;
 import org.apache.log4j.Logger;
 
@@ -18,6 +19,8 @@ public class DefaultRpcStatus implements RpcStatus {
                 "freeMemory={"+ runtime.freeMemory() +"B}, " +
                 "maxMemory={"+ runtime.maxMemory() +"B}, " +
                 "totalMemory={"+ runtime.totalMemory() +"B}";
+
+        // following codes ref: https://www.cnblogs.com/wytings/p/4711650.html
         ThreadGroup group = Thread.currentThread().getThreadGroup();
         ThreadGroup topGroup = group;
         // get the root thread group
@@ -41,7 +44,7 @@ public class DefaultRpcStatus implements RpcStatus {
     }
 
     @Override
-    public void alter() {
+    public void alter(RpcCriterion condition, Object... inputs) {
 
     }
 

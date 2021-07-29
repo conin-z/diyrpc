@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @date
  */
 public class RoundRobinServerSelector extends AbstractSelector{
+
     /**
      * 'index' indicates the number of servers currently selected
      * increments each time when invoked
@@ -21,11 +22,17 @@ public class RoundRobinServerSelector extends AbstractSelector{
     private AtomicInteger index = new AtomicInteger();
 
     @Override
-    public String doSelect(Set<String> serverListForItfClass, RequestImpl request){
+    protected void preCheck() {
+
+    }
+
+    @Override
+    protected String doSelect(Set<String> serverListForItfClass, RequestImpl request){
         List<String> list = new ArrayList<>(serverListForItfClass);
         if(index.get() >= list.size()){
             index.compareAndSet(list.size(), index.get() % list.size());
         }
         return list.get(index.addAndGet(1));
     }
+
 }

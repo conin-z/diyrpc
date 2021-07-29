@@ -5,7 +5,7 @@ import com.rpc.utils.JsonUtil;
 import java.io.Serializable;
 
 /**
- * wrapper; prototype for serialization
+ * wrapper; like the app layer protocol for RPC
  *
  * @user KyZhang
  * @date

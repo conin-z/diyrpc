@@ -21,6 +21,7 @@ com\rpc\socket\nettyhandler\ServerJsonDecoder.class
 com\rpc\utils\Constant.class
 com\rpc\management\AbstractRpcConfig.class
 com\rpc\timertask\StatusTrigger.class
+com\rpc\management\RpcCriterion.class
 com\rpc\socket\nettyhandler\ServerJsonEncoder.class
 com\rpc\selector\RandomServerSelector.class
 com\rpc\provider\ServerRpcConfig.class

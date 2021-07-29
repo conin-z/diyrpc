@@ -1,5 +1,6 @@
 package com.rpc.consumer.subscriber;
 
+import com.rpc.provider.ServerRpcConfig;
 import com.rpc.registerconfig.RedisRegisterCenterConfig;
 import com.rpc.consumer.ServerInfo;
 import com.rpc.utils.Constant;
@@ -11,8 +12,7 @@ import redis.clients.jedis.JedisPubSub;
 import java.util.Set;
 
 /**
- * associated with one 'RpcInterfaceProxyFactoryBean<T>' --> Class<T> one serviceItf;
- * for client, refer service
+ * for client, to subscribe the RPC service-related information from Redis
  *
  * @user KyZhang
  * @date
@@ -21,33 +21,20 @@ public class RedisServiceSubscriber implements ServiceSubscriber {
 
     private static final Logger logger = Logger.getLogger(RedisServiceSubscriber.class);
 
-    private static JedisPool pool;
+    protected final JedisPool pool;
 
     public RedisServiceSubscriber() {
-        pool = RedisRegisterCenterConfig.getJedisPool();
-        init(); // such as: to listen to some redis channels
+        RedisRegisterCenterConfig centerConfig = ServerRpcConfig.applicationContext.getBean(RedisRegisterCenterConfig.class);
+        pool = centerConfig.getJedisPool();
+        init();
     }
 
 
     /**
-     * here client can get aches regarding all servers or the services of a certain server
-     *
-     * @param key
-     * @return
+     * do some initialization, such as: to listen to some redis channels
+     * subclasses can override this method to cancel the channel listening, or add other initialization work
      */
-    @Override
-    public Set<String> getServiceList(String key){
-        checkPool();
-        Set<String> set;
-        try(Jedis jedis = pool.getResource()){
-            set = jedis.smembers(key);
-        }
-        return set;
-    }
-
-
-    @Override
-    public void init(){
+    protected void init(){
         checkPool();
         new Thread(() -> {
             try(Jedis jedis = pool.getResource()){
@@ -70,6 +57,24 @@ public class RedisServiceSubscriber implements ServiceSubscriber {
         }).start();
     }
 
+
+    /**
+     * here client can get aches regarding all servers or the services of a certain server
+     *
+     * @param key
+     * @return
+     */
+    @Override
+    public final Set<String> getServiceList(String key){
+        checkPool();
+        Set<String> set;
+        try(Jedis jedis = pool.getResource()){
+            set = jedis.smembers(key);
+        }
+        return set;
+    }
+
+
     /**
      * here client can remove element from the redis set with key's name $key$
      *
@@ -77,7 +82,7 @@ public class RedisServiceSubscriber implements ServiceSubscriber {
      * @param eleName
      * @return
      */
-    public long removeElement(String key, String eleName){
+    public final long removeElement(String key, String eleName){
         checkPool();
         long res;
         try(Jedis jedis = pool.getResource()) {

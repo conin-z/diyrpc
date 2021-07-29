@@ -8,11 +8,9 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
 
-
-
 /**
- * for server; export service
- * associated with this RedisRegisterCenterConfig
+ * for server; export service-related information to Redis
+ * associated with {@link RedisRegisterCenterConfig}
  *
  * @user KyZhang
  * @date
@@ -21,16 +19,28 @@ public class RedisServiceRegistry implements ServiceRegistry{
 
     private static final Logger logger = Logger.getLogger(RedisServiceRegistry.class);
 
-    private JedisPool pool;
-    private ServerRpcConfig server;
+    protected final JedisPool pool;
+    protected final ServerRpcConfig server;
 
-    public RedisServiceRegistry() {
-        this.pool = RedisRegisterCenterConfig.getJedisPool();
+    public RedisServiceRegistry(){
+        RedisRegisterCenterConfig centerConfig = ServerRpcConfig.applicationContext.getBean(RedisRegisterCenterConfig.class);
+        server = ServerRpcConfig.applicationContext.getBean(ServerRpcConfig.class);
+        pool = centerConfig.getJedisPool();
+        init();
+    }
+
+
+    /**
+     * do some initialization
+     * subclasses can override this method to cancel the channel listening, or add other initialization work
+     */
+    protected void init(){
+
     }
 
 
     @Override
-    public void keepAlive(int seconds) {
+    public final void keepAlive(int seconds) {
         checkPool();
         try(Jedis jedis = pool.getResource()) {
             jedis.expire(Constant.LOCAL_ADDRESS, seconds + 1);
@@ -40,13 +50,14 @@ public class RedisServiceRegistry implements ServiceRegistry{
 
 
     @Override
-    public void lclAddressToRegisterCenter() {
+    public final void lclAddressToRegisterCenter() {
         checkPool();
         try(Jedis jedis = pool.getResource()) {
-            long num = jedis.sadd(Constant.SERVER_LIST_NAME, Constant.LOCAL_ADDRESS);
-            /* ONLINE msg to listener */
+            // ONLINE msg to listener
             Long listenerNum = jedis.publish(Constant.ONLINE, Constant.LOCAL_ADDRESS);
             logger.info("================= send ONLINE msg to listeners of number { " + listenerNum + " } =================");
+            // register with center
+            Long num = jedis.sadd(Constant.SERVER_LIST_NAME, Constant.LOCAL_ADDRESS);
             if(num > 0){
                 logger.debug("register server of { " + Constant.LOCAL_ADDRESS + " } to redis key named {" + Constant.SERVER_LIST_NAME + " }");
             }else {
@@ -58,7 +69,7 @@ public class RedisServiceRegistry implements ServiceRegistry{
 
 
     @Override
-    public void serviceToRegisterCenter(Class<?> clz)  {
+    public final void serviceToRegisterCenter(Class<?> clz)  {
         Class<?>[] interfaces = clz.getInterfaces();
 
         if (interfaces != null && interfaces.length == 1){    //single itf
@@ -71,9 +82,6 @@ public class RedisServiceRegistry implements ServiceRegistry{
                 Long num = resource.sadd(Constant.LOCAL_ADDRESS, infName);
                 if(num > 0){
                     logger.debug("service { " + infName + " } of server is published!");
-                    if (this.server == null) {
-                        server = ServerRpcConfig.applicationContext.getBean(ServerRpcConfig.class);
-                    }
                 }else {
                     logger.warn("service { " + infName + " } of server already published");
                 }
@@ -84,6 +92,7 @@ public class RedisServiceRegistry implements ServiceRegistry{
         }
     }
 
+
     /**
      * here server can remove element from the redis set with key's name $key$
      *
@@ -92,7 +101,7 @@ public class RedisServiceRegistry implements ServiceRegistry{
      * @return
      */
     @Override
-    public long removeElement(String key, String eleName) {
+    public final long removeElement(String key, String eleName) {
         checkPool();
         long res;
         try(Jedis resource = pool.getResource()) {
@@ -101,13 +110,14 @@ public class RedisServiceRegistry implements ServiceRegistry{
         return res;
     }
 
+
     /**
      * delete one key from redis
      *
      * @param key
      * @return
      */
-    public long deleteKey(String key) {
+    public final long deleteKey(String key) {
         checkPool();
         long res;
         try(Jedis resource = pool.getResource()) {

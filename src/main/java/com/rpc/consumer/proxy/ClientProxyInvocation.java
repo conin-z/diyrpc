@@ -24,7 +24,7 @@ import java.util.concurrent.SynchronousQueue;
 public class ClientProxyInvocation implements InvocationHandler {
 
     private static final Logger logger = Logger.getLogger(ClientProxyInvocation.class);
-    //target class
+    // target class
     private Class<?> itfClass;
 
     public ClientProxyInvocation(Class<?> itfClass) {
@@ -43,7 +43,7 @@ public class ClientProxyInvocation implements InvocationHandler {
         }
         // new request
         RequestImpl request = new RequestImpl(MessageType.SERVER);
-        //request.setRequestId(String.valueOf(System.currentTimeMillis()));
+        // request.setRequestId(String.valueOf(System.currentTimeMillis()));
         request.setRequestId(UUID.randomUUID().toString());  //
         request.setItf(itfClass);
         request.setItfName(itfClass.getName());
@@ -99,10 +99,9 @@ public class ClientProxyInvocation implements InvocationHandler {
 
     /**
      *
-     * @param selector
+     * @param selector  load balancing strategy
      * @param request
-     * @return
-     *     false: no provider for this service or the provider selected is invalid
+     * @return   if false: no provider for this service or the provider selected is invalid
      */
     private boolean send(ServerSelector selector, RequestImpl request) throws InterruptedException {
         String itfName = request.getItfName();
@@ -110,9 +109,10 @@ public class ClientProxyInvocation implements InvocationHandler {
         if(serverSet != null && serverSet.size() > 0) {
             String selectedServerInfo = selector.select(serverSet, request);
             Channel channel = ServerInfo.serverChannelMap.get(selectedServerInfo);
-
-            //could combine with RocketMQ ---> having retry ?
-            //here we diy using the method of self-polling
+            /*
+             * could combine with RocketMQ ---> having retry [TODO]
+             * here we diy using the method of self-polling
+             */
             try {
                 if (channel == null) {
                     logger.warn("== no open channel for server {" + selectedServerInfo + "}! will close this server candidate");
@@ -136,7 +136,9 @@ public class ClientProxyInvocation implements InvocationHandler {
                 num = Constant.REQUEST_RETRY_TIMES;
                 ChannelFuture future;
                 do {
+
                     future = channel.writeAndFlush(request).sync();     // send out
+
                     if (num < 0) {
                         logger.error("== send request error! will close this server candidate");
                         throw new AppException();

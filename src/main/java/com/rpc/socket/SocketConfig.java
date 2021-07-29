@@ -10,6 +10,14 @@ public interface SocketConfig extends RpcStatus{
 
     void init();
     void close();
+
+    /**
+     * used by clients
+     *
+     * @param ip
+     * @param port
+     * @return
+     */
     boolean connect(final String ip, final int port);
 
 }

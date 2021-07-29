@@ -13,12 +13,16 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public class RandomServerSelector extends AbstractSelector{
 
-    //private SecureRandom random = new SecureRandom();
+    @Override
+    protected void preCheck() {
+
+    }
+
 
     @Override
-    public String doSelect(Set<String> serverListForItfClass, RequestImpl request){
+    protected String doSelect(Set<String> serverListForItfClass, RequestImpl request){
         List<String> list = new ArrayList<>(serverListForItfClass);
-        //int i = random.nextInt(list.size());
         return list.get(ThreadLocalRandom.current().nextInt(list.size()));
     }
+
 }

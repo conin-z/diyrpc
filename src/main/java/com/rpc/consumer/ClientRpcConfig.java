@@ -2,6 +2,7 @@ package com.rpc.consumer;
 
 import com.rpc.consumer.proxy.RpcItfScanner;
 import com.rpc.management.AbstractRpcConfig;
+import com.rpc.management.GracefulShutdownListener;
 import com.rpc.management.RpcStatus;
 import com.rpc.registerconfig.RegisterCenterConfig;
 import com.rpc.management.RpcConfig;
@@ -62,8 +63,10 @@ public class ClientRpcConfig extends AbstractRpcConfig implements RpcConfig, Bea
 
 
     /**
-     *  offline for rpc service
-     *  if user not call the method of ioc's registerShutHook()
+     * offline for rpc service
+     * when user does not call the method of ioc's registerShutHook()
+     *
+     * @see #destroy()
      */
     {
         Runtime.getRuntime().addShutdownHook(new Thread(()->{
@@ -75,7 +78,7 @@ public class ClientRpcConfig extends AbstractRpcConfig implements RpcConfig, Bea
      * to customize BDs for remote services;
      * [this way]: regarding local itfPaths : needs client create package for services;
      * only the class marked with @RpcReference can be rpc-ed using proxy;
-     * sometimes just the form of property declaration  --> written in xxController : consider next
+     * sometimes just the form of property declaration  --> written in xxController : consider next TODO
      *
      * @param registry
      * @throws BeansException
@@ -92,7 +95,7 @@ public class ClientRpcConfig extends AbstractRpcConfig implements RpcConfig, Bea
     }
 
     /**
-     * start!  and keep schedule subscribe lists from redis;
+     * start ioc and schedule tasks such as subscribing service lists regularly from register center
      *
      * @param event
      */
@@ -112,7 +115,9 @@ public class ClientRpcConfig extends AbstractRpcConfig implements RpcConfig, Bea
                 return;
             }
         }
+
         startDefaultTimerTasks();
+
         isIocStarted = true;
         logger.info("============= Spring ioc started, and default timer tasks begin to run =============");
     }
@@ -132,8 +137,7 @@ public class ClientRpcConfig extends AbstractRpcConfig implements RpcConfig, Bea
 
 
     @Override
-    public void startDefaultTimerTasks() {
-        super.startDefaultTimerTasks();
+    protected void doStartDefaultTimerTasks() {
         if(cacheRefreshTask == null){
             cacheRefreshTask = new ScheduleSubscribeTimerTask();
         }
@@ -142,12 +146,23 @@ public class ClientRpcConfig extends AbstractRpcConfig implements RpcConfig, Bea
 
 
     /**
-     * close rpc when user has called the method of context's registerShutHook():
-     *      1.hook registry  2. doClose :
-     *                            way1:   ApplicationListener<ContextClosedEvent>'s onApplicationEvent()
-     *                            way2:   LifeCycle's stop()
-     *                            way3:   Disposable's destroy()
+     * close RPC Gracefully;
      *
+     * in this project, there are several ways :
+     * 1. by JVM shutdownHook registry :
+     *       way of code block during the object instantiation of {@code ClientRpcConfig}
+     * 2. by relying on Spring :
+     *       based on the logic flow of doClose() :
+     *             way1:   use ApplicationListener<ContextClosedEvent>'s onApplicationEvent() {@link GracefulShutdownListener}
+     *             way2:   implements LifeCycle's stop()
+     *             way3:   implements Disposable's destroy() {@link #destroy()}
+     *
+     * including:
+     *          timer
+     *          socket module: such as boss/worker groups' close...
+     *          registry module
+     *          local caches
+     *          others like DataBase (this project does not have)
      */
     public void destroy(){
         synchronized (offlineOnce) {
@@ -182,8 +197,11 @@ public class ClientRpcConfig extends AbstractRpcConfig implements RpcConfig, Bea
     }
 
 
-    /* ------------------------- get and set ------------------------- */
-    /* ---- if user wants to customize/acquire some configuration ---- */
+
+    //--------------------------------------------------------------------
+    //                        get() and set()
+    //     if user wants to customize/acquire some configuration
+    //--------------------------------------------------------------------
 
     public ServerSelector getServerSelector() {
         return serverSelector;

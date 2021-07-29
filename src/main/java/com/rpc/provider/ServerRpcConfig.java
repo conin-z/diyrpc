@@ -9,6 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.rpc.exception.AppException;
 import com.rpc.management.AbstractRpcConfig;
+import com.rpc.management.GracefulShutdownListener;
 import com.rpc.management.RpcConfig;
 import com.rpc.management.RpcStatus;
 import com.rpc.registerconfig.*;
@@ -46,10 +47,16 @@ public class ServerRpcConfig extends AbstractRpcConfig implements RpcConfig, Bea
 
 
     /**
-     * when entire server has shutdown:
-     *    netty module shutdown : groups' close;
-     *    registry module shutdown : remove self;
-     *    others like : Timer, DataBase(here not);
+     * close RPC Gracefully;
+     *
+     * in this project, there are several ways :
+     *      1. by JVM shutdownHook registry:
+     *            way of code block during the object instantiation of {@code ServerRpcConfig}
+     *      2. by relying on Spring:
+     *            based on the logic flow of doClose():
+     *                way1:  use ApplicationListener<ContextClosedEvent>'s onApplicationEvent() {@link GracefulShutdownListener}
+     *                way2:  implements LifeCycle's stop()
+     *                way3:  implements Disposable's destroy() {@link #destroy()}
      */
     {
         Runtime.getRuntime().addShutdownHook(new Thread(()->{
@@ -62,7 +69,7 @@ public class ServerRpcConfig extends AbstractRpcConfig implements RpcConfig, Bea
 
     public ServerRpcConfig(RegisterCenterConfig registerCenter, ServiceRegistry registry, final int port) {
         this(port);
-        /* RegisterCenterConfig and ServiceRegistry, these two are used together */
+        // RegisterCenterConfig and ServiceRegistry, these two are used together
         this.registerCenter = registerCenter;
         this.serviceRegistry = registry;
         if(RpcStatus.class.isAssignableFrom(registerCenter.getClass())){
@@ -106,16 +113,15 @@ public class ServerRpcConfig extends AbstractRpcConfig implements RpcConfig, Bea
     @Override
     public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
         Class<?> clz = bean.getClass();
-        /* with @RpcService marked */
+        // with @RpcService marked
         if(clz.isAnnotationPresent(RpcService.class)){
-            /* [RedisRegisterCenterConfig] and [RedisServiceRegistry], these two are used together */
+            // RedisRegisterCenterConfig and RedisServiceRegistry, these two are used together
             checkRegistry();
             serviceRegistry.serviceToRegisterCenter(clz);
             numRpcServiceProvided.incrementAndGet();
         }
         return bean;
     }
-
 
 
     /**
@@ -168,19 +174,21 @@ public class ServerRpcConfig extends AbstractRpcConfig implements RpcConfig, Bea
 
 
     @Override
-    public void startDefaultTimerTasks() {
+    protected void doStartDefaultTimerTasks() {
         int expireSeconds = registerCenter.getExpireSeconds();
         if(expireTimerTask == null){
             expireTimerTask = new ExpireTimerTask(expireSeconds);
         }
         addTimerTask(expireTimerTask, expireSeconds, expireSeconds, TimeUnit.SECONDS);
-        super.startDefaultTimerTasks();
     }
 
 
-
     /**
-     *  close RPC
+     * when entire server has shutdown:
+     *    timer
+     *    socket module: such as boss/worker groups' close...
+     *    registry module
+     *    others like DataBase (this project does not have)
      */
     @Override
     public void destroy() {
@@ -220,12 +228,12 @@ public class ServerRpcConfig extends AbstractRpcConfig implements RpcConfig, Bea
 
 
 
-    //get info (could like spring to implements itf_aware)
+    // get info (could like spring to implements itf_aware)
     public boolean isRegistered() { return isRegistered; }
     public ExpireTimerTask getExpireTimerTask() { return expireTimerTask; }
     public int getPort() { return port; }
 
-    /* ---- if user wants to customize some configuration ---- */
+    // if user wants to customize some configuration
     public void setExpireTimerTask(ExpireTimerTask expireTimerTask) { this.expireTimerTask = expireTimerTask; }
     public void setPort(int port) { this.port = port; }
 }

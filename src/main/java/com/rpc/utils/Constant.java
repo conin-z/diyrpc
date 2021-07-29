@@ -18,7 +18,7 @@ public class Constant{
     public static final String ONLINE = "ONLINE";
     public static final String OFFLINE = "OFFLINE";
 
-    /* servers will update this into " $ip$::$port$ " */
+    // servers will update this into " $ip$::$port$ "
     public static String LOCAL_ADDRESS = "localhost";
     public static String IP_PORT_GAP = "::";
 

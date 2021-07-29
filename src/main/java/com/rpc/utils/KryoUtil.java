@@ -5,6 +5,8 @@ import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import com.rpc.message.RequestImpl;
 import com.rpc.message.ResponseImpl;
+import com.rpc.socket.nettyhandler.KryoDecoder;
+import com.rpc.socket.nettyhandler.KryoEncoder;
 import io.netty.buffer.ByteBuf;
 import org.apache.commons.codec.binary.Base64;
 import org.objenesis.strategy.StdInstantiatorStrategy;
@@ -34,7 +36,7 @@ public class KryoUtil {
         protected Kryo initialValue() {
             Kryo kryo = new Kryo();
 
-            /**
+            /*
              * 不要轻易改变这里的配置！更改之后，序列化的格式就会发生变化，
              * 上线的同时就必须清除 Redis 里的所有缓存，
              * 否则那些缓存再回来反序列化时就会报错
@@ -47,7 +49,7 @@ public class KryoUtil {
              * 内部类；
              * 泛型对象； //Gson不支持 会擦除
              * Builder 模式；
-             * 其中部分特性的支持，需要使用者手动设定 Kryo 的某些配置  /~/
+             * 其中部分特性的支持，需要使用者手动设定 Kryo 的某些配置
              */
 
             // circular references (otherwise stack overflow)
@@ -58,7 +60,7 @@ public class KryoUtil {
             kryo.register(RequestImpl.class);
 
 
-            // fix the NPE bug when deserializing Collections.   /~/
+            // fix the NPE bug when deserializing Collections
             ((Kryo.DefaultInstantiatorStrategy) kryo.getInstantiatorStrategy())
                     .setFallbackInstantiatorStrategy(new StdInstantiatorStrategy());
 
@@ -85,7 +87,8 @@ public class KryoUtil {
 
     /**
      * serializes objects [with types] into byte arrays
-     * usage : directly  --> KryoEncoder
+     * usage : directly  -->
+     * @see KryoEncoder
      *
      * @param obj
      * @param <T>
@@ -116,7 +119,7 @@ public class KryoUtil {
     /**
      * serializes the object [with its type] to String
      * Base64 encoding is utilized
-     * usage : be combined with --> pipeline.addLast(new StringEncoder());
+     * usage : be combined with --> <code>pipeline.addLast(new StringEncoder());<code/>
      *
      * @param obj
      * @param <T>
@@ -132,7 +135,8 @@ public class KryoUtil {
 
     /**
      * deserializes the byte array to original object
-     * usage : directly  --> KryoDecoder
+     * usage : directly  -->
+     * @see KryoDecoder
      *
      * @param byteArray
      * @param <T>

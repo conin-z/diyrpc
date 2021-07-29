@@ -1,14 +1,22 @@
 package com.rpc.management;
 
-import org.apache.log4j.Logger;
+import com.rpc.consumer.ClientRpcConfig;
+import com.rpc.provider.ServerRpcConfig;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextClosedEvent;
 
+
 /**
+ * close RPC Gracefully;
  *
- * way1 : use the event propagation of Spring to control consumer/provider's shutdown;
- * will be invoked when ioc closing;
- * can be inherited and the single method can be overridden
+ * in this project, there are several ways :
+ * 1. by JVM shutdownHook registry :
+ *       way of code block during the object instantiation of {@code ClientRpcConfig} or {@code ServerRpcConfig}
+ * 2. by relying on Spring :
+ *       based on the logic flow of doClose() :
+ *             way1:   use ApplicationListener<ContextClosedEvent>'s onApplicationEvent() {@link #onApplicationEvent(ContextClosedEvent)}
+ *             way2:   implements LifeCycle's stop()
+ *             way3:   implements Disposable's destroy() {@link ClientRpcConfig#destroy()} {@link ServerRpcConfig#destroy()}
  *
  * @user KyZhang
  * @date
@@ -26,12 +34,10 @@ public class GracefulShutdownListener implements ApplicationListener<ContextClos
 
 
     /**
-     * close rpc when user has called the method of context's registerShutHook():
-     *      1.hook registry  2. doClose :
-     *                            way1:   ApplicationListener<ContextClosedEvent>'s onApplicationEvent()
-     *                            way2:   LifeCycle's stop()
-     *                            way3:   Disposable's destroy()
+     * way1 : use the event propagation of Spring to control consumer/provider's shutdown;
      *
+     * will be invoked when ioc closing;
+     * can be inherited and the single method can be overridden
      */
     @Override
     public void onApplicationEvent(ContextClosedEvent event) {

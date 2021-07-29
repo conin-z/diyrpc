@@ -6,8 +6,7 @@ import org.apache.log4j.Logger;
 
 
 /**
- * customize the timer task;
- * can be inherited
+ * the task to set/keep keys' life regularly with register center
  */
 public class ExpireTimerTask extends AbstractTimerTask {
 
@@ -17,8 +16,8 @@ public class ExpireTimerTask extends AbstractTimerTask {
     private int expireSeconds;
 
     public ExpireTimerTask(int expireSeconds){
-        this.registry = ServerRpcConfig.applicationContext.getBean(ServerRpcConfig.class).getServiceRegistry();
-        this.expireSeconds = expireSeconds;
+        registry = ServerRpcConfig.applicationContext.getBean(ServerRpcConfig.class).getServiceRegistry();
+        expireSeconds = expireSeconds;
     }
 
     @Override

@@ -1,5 +1,8 @@
 package com.rpc.registerconfig;
 
+import com.rpc.consumer.ClientRpcConfig;
+import com.rpc.management.RpcCriterion;
+import com.rpc.provider.ServerRpcConfig;
 import org.apache.log4j.Logger;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
@@ -7,24 +10,30 @@ import redis.clients.jedis.JedisPoolConfig;
 import java.io.IOException;
 import java.util.Properties;
 
+
 /**
- * association with one instance of RpcConfiguration;
- * as formal parameter
+ * association with (as constructor parameter of) the instance of <code>RpcConfig<code/>;
+ *
+ * since coupled to Jedis, <code>RedisRegisterCenterConfig<code/> is set to final now
+ * TODO: will refactor later so as to be able to use Redisson and others [extensibility]
+ *
+ * @see ServerRpcConfig
+ * @see ClientRpcConfig
  *
  * @user KyZhang
  * @date
  */
-public class RedisRegisterCenterConfig implements RegisterCenterConfig {
+public final class RedisRegisterCenterConfig implements RegisterCenterConfig {
 
     private static final Logger logger = Logger.getLogger(RedisRegisterCenterConfig.class);
 
-    private String ip = "localhost";  // --can be set  //InetAddress.getLocalHost().getHostAddress()
+    private String ip = "localhost";  // can be set; InetAddress.getLocalHost().getHostAddress()
     private int port = 6379;
-    private String password = ""; // -- can be set
+    private String password = ""; // can be set
     private int timeout = 300;   // connect over time for one client
     private int idl;
     private int maxActive = 128;  // number of connection
-    private int expireSeconds = 30; // default 30s  // --can be set
+    private int expireSeconds = 30; // default 30s; can be set
     private long maxWaitMillis = -1L;
     private boolean testOnReturn;
     private boolean testOnBorrow;
@@ -34,17 +43,18 @@ public class RedisRegisterCenterConfig implements RegisterCenterConfig {
 
 
     public RedisRegisterCenterConfig() {
-        initRegisterCenter();
+        initJedisPool();
     }
 
     public RedisRegisterCenterConfig(String jedisConfigPath) {
         this.jedisConfigPath = jedisConfigPath;
-        initRegisterCenter();
+        initJedisPool();
     }
 
     public static JedisPool getJedisPool() {
         return pool;
     }
+
 
     /**
      * services offline from redis
@@ -80,10 +90,9 @@ public class RedisRegisterCenterConfig implements RegisterCenterConfig {
 
 
     /**
-     * initialize the jedis pool
-     *
+     * initialize the jedis pool at the end of instantiation
      */
-    public void initRegisterCenter() {
+    private void initJedisPool() {
         JedisPoolConfig config = new JedisPoolConfig();
 
         if(this.jedisConfigPath == null) {
@@ -108,6 +117,29 @@ public class RedisRegisterCenterConfig implements RegisterCenterConfig {
 
     }
 
+
+    @Override
+    public void show() {
+        String info = "================================= status of Jedis pool : \n" +
+                "{ " + pool.getNumActive() + " } ACTIVE JEDIS INSTANCES\n" +
+                "{ " + pool.getNumWaiters() + " } BLOCKED THREADS\n" +
+                "{ " + pool.getNumIdle() + " } ACTIVE JEDIS INSTANCES\n" +
+                "=================================          =================================";
+        logger.info(info);
+    }
+
+
+    @Override
+    public void alter(RpcCriterion condition, Object... inputs) {
+
+    }
+
+
+
+    //--------------------------------------------------------------------
+    //                        get() and set()
+    //     if user wants to customize/acquire some configuration
+    //--------------------------------------------------------------------
 
     public int getPort() {
         return port;
@@ -201,18 +233,6 @@ public class RedisRegisterCenterConfig implements RegisterCenterConfig {
         this.jedisConfigPath = jedisConfigPath;
     }
 
-    @Override
-    public void show() {
-        String info = "================================= status of Jedis pool : \n" +
-                "{ " + pool.getNumActive() + " } ACTIVE JEDIS INSTANCES\n" +
-                "{ " + pool.getNumWaiters() + " } BLOCKED THREADS\n" +
-                "{ " + pool.getNumIdle() + " } ACTIVE JEDIS INSTANCES\n" +
-                "=================================          =================================";
-        logger.info(info);
-    }
 
-    @Override
-    public void alter() {
 
-    }
 }

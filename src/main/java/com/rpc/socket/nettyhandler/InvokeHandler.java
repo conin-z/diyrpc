@@ -30,7 +30,7 @@ public class InvokeHandler extends ChannelInboundHandlerAdapter {
 
 
     /**
-     * message process and wrap into a instance of class ResponseImpl for writing
+     * message process and wrap result-related information into a instance of {@link ResponseImpl} to send
      *
      * @param ctx
      * @param msg
@@ -54,6 +54,7 @@ public class InvokeHandler extends ChannelInboundHandlerAdapter {
         }
 
     }
+
 
     /**
      * invoke regarding message of MessageType.SERVER
@@ -115,7 +116,7 @@ public class InvokeHandler extends ChannelInboundHandlerAdapter {
                         future.channel().writeAndFlush(response1);
                         future.channel().close();   // like ChannelFutureListener.CLOSE_ON_FAILURE
                     }
-                    /* publish msg */
+                    // publish msg
                     ServiceRegistry registry = ServerRpcConfig.applicationContext.getBean(ServerRpcConfig.class).getServiceRegistry();
                     registry.deleteKey(Constant.LOCAL_ADDRESS);
                 }

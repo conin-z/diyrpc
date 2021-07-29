@@ -2,7 +2,7 @@ package com.rpc.message;
 
 
 /**
- * like HTTP prototype, here two cases of state;
+ * like HTTP protocol, here two cases of status;
  *
  * @user KyZhang
  * @date

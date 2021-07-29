@@ -3,6 +3,7 @@ package com.rpc.socket;
 import com.rpc.consumer.ClientRpcConfig;
 import com.rpc.consumer.ServerInfo;
 import com.rpc.exception.AppException;
+import com.rpc.management.RpcCriterion;
 import com.rpc.socket.nettyhandler.ResponseHandler;
 import com.rpc.utils.Constant;
 import io.netty.bootstrap.Bootstrap;
@@ -86,7 +87,7 @@ public class NettyClientSocketConfig extends AbstractNettySocketConfig implement
     }
 
     @Override
-    public void alter() {
+    public void alter(RpcCriterion condition, Object... inputs) {
 
     }
 

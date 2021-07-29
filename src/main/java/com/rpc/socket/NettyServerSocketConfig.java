@@ -1,5 +1,6 @@
 package com.rpc.socket;
 
+import com.rpc.management.RpcCriterion;
 import com.rpc.provider.ServerRpcConfig;
 import com.rpc.socket.nettyhandler.NettyRequestInfo;
 import com.rpc.socket.nettyhandler.InvokeHandler;
@@ -15,7 +16,7 @@ public class NettyServerSocketConfig extends AbstractNettySocketConfig implement
 
     private static final Logger logger = Logger.getLogger(NettyServerSocketConfig.class);
 
-    //could add MQConfig
+    // TODO: here could add MQConfig
     private NioEventLoopGroup worker;
     private ServerBootstrap serverBootstrap;
     private NioEventLoopGroup boss;
@@ -25,9 +26,9 @@ public class NettyServerSocketConfig extends AbstractNettySocketConfig implement
         this.port = port;
     }
 
+
     /**
      * for server
-     *
      */
     public void init() {
         super.init();
@@ -82,7 +83,7 @@ public class NettyServerSocketConfig extends AbstractNettySocketConfig implement
     }
 
     @Override
-    public void alter() {
+    public void alter(RpcCriterion condition, Object... inputs) {
 
     }
 

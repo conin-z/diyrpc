@@ -12,6 +12,13 @@ import io.netty.handler.codec.MessageToByteEncoder;
  */
 public class KryoEncoder extends MessageToByteEncoder {
 
+    /**
+     * @see KryoUtil#writeToByteArray(Object) 
+     * 
+     * @param ctx
+     * @param msg
+     * @param out
+     */
     @Override
     protected void encode(ChannelHandlerContext ctx, Object msg, ByteBuf out) {
         byte[] bytes = KryoUtil.writeToByteArray(msg);

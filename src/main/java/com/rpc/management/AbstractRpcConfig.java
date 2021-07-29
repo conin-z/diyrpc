@@ -15,18 +15,18 @@ import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractRpcConfig implements RpcConfig {
 
-    /* --------------- socket-related --------------- */
+    /** --------------- socket-related -------------- */
     protected SocketConfig socketConfig;
 
-    /* --------------- redis-related --------------- */
+    /** --------------- redis-related --------------- */
     protected RegisterCenterConfig registerCenter;
     protected ServiceSubscriber serviceSubscriber; // used for rpc consumer
     protected ServiceRegistry serviceRegistry; // used for rpc provider
     protected volatile Boolean isRegistered = false;
 
-    /* ---------- scheduled timer-related ---------- */
+    /** ---------- scheduled timer-related ---------- */
     protected int corePoolSizeForConcurrentTimer = 5;
-    protected ScheduledThreadPoolExecutor timer;
+    protected static ScheduledThreadPoolExecutor timer;
     protected StatusObserver socketObserver =  new StatusObserver(new DefaultRpcStatus());;
     protected StatusObserver registerCenterObserver = new StatusObserver(new DefaultRpcStatus());;
     protected long socketObservePeriod = 60l;
@@ -58,13 +58,16 @@ public abstract class AbstractRpcConfig implements RpcConfig {
     }
 
 
-    @Override
-    public void startDefaultTimerTasks() {
+    public final void startDefaultTimerTasks() {
         timer = new ScheduledThreadPoolExecutor(corePoolSizeForConcurrentTimer);
+        doStartDefaultTimerTasks();
         addTimerTask(registerCenterObserver, centerObserveDelay, centerObservePeriod, TimeUnit.SECONDS);
         addTimerTask(socketObserver, socketObserveDelay, socketObservePeriod, TimeUnit.SECONDS);
         addTimerTask(new StatusObserver(new DefaultRpcStatus()), socketObserveDelay*2, socketObservePeriod*2, TimeUnit.SECONDS);
     }
+
+
+    protected abstract void doStartDefaultTimerTasks();
 
 
     /**
@@ -75,13 +78,11 @@ public abstract class AbstractRpcConfig implements RpcConfig {
      * @param period
      * @param unit
      */
-    @Override
     public void addTimerTask(Runnable task, long delay, long period, TimeUnit unit) {
         timer.scheduleAtFixedRate(task, delay, period, unit);
     }
 
 
-    @Override
     public void closeTimer() throws InterruptedException {
         if (this.timer != null) {
             timer.shutdown();
@@ -95,8 +96,10 @@ public abstract class AbstractRpcConfig implements RpcConfig {
 
 
 
-    /* ------------------------- get and set ------------------------- */
-    /* ---- if user wants to customize/acquire some configuration ---- */
+    //--------------------------------------------------------------------
+    //                        get() and set()
+    //     if user wants to customize/acquire some configuration
+    //--------------------------------------------------------------------
 
     public boolean isIocStarted() {
         return isIocStarted;

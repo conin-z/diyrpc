@@ -1,8 +1,6 @@
 package com.rpc.timertask;
 
 
-import java.util.TimerTask;
-
 /**
  * just to collect timer logic at this level
  *

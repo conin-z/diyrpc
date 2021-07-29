@@ -4,7 +4,7 @@ package com.rpc.message;
 import java.io.Serializable;
 
 /**
- * wrapper; the app layer protocol for serialization;
+ * wrapper; like the app layer protocol for RPC
  *
  * @user KyZhang
  * @date

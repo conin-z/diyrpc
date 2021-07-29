@@ -14,6 +14,14 @@ import java.util.List;
  */
 public class KryoDecoder extends ByteToMessageDecoder {
 
+    /**
+     * @see KryoUtil#readFromByteArray(ByteBuf) 
+     *
+     * @param ctx
+     * @param in
+     * @param out
+     * @throws AppException
+     */
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws AppException {
         if (in == null) {

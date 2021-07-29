@@ -26,7 +26,7 @@ public class RpcItfScanner extends ClassPathBeanDefinitionScanner
      * scan way;
      * can be changed with other ways such as by service's full name
      *
-     * @param basePackages redis provided
+     * @param basePackages  the package in which the remote service interface lies
      * @return
      */
     protected Set<BeanDefinitionHolder> doScan(String... basePackages) {
@@ -36,12 +36,13 @@ public class RpcItfScanner extends ClassPathBeanDefinitionScanner
         if(holders != null && holders.size() > 0){
             for(BeanDefinitionHolder holder : holders){
                 GenericBeanDefinition beanDefinition = (GenericBeanDefinition)holder.getBeanDefinition();
-                // constructor argument values
-                // add a generic argument value to be matched by name.
+                /*
+                 * constructor argument values;
+                 * add a generic argument value to be matched by name.
+                 */
                 beanDefinition.getConstructorArgumentValues().addGenericArgumentValue(beanDefinition.getBeanClassName());
-                // since instantiation needs to select Constructor !!
+                // since instantiation needs to select constructor!
                 beanDefinition.setBeanClass(RpcInterfaceProxyFactoryBean.class);  //factory bean
-                //beanDefinition.setAutowireMode(GenericBeanDefinition.AUTOWIRE_BY_TYPE);
             }
         }
         return holders;
@@ -49,7 +50,7 @@ public class RpcItfScanner extends ClassPathBeanDefinitionScanner
 
 
     /**
-     * for rpc, open interface(api) for a certain service is must;
+     * for rpc, open interface(api) for a certain service is must
      *
      * @param beanDefinition
      * @return
@@ -57,7 +58,10 @@ public class RpcItfScanner extends ClassPathBeanDefinitionScanner
     @Override
     protected boolean isCandidateComponent(AnnotatedBeanDefinition beanDefinition) {
         AnnotationMetadata metadata = beanDefinition.getMetadata(); //get metadata of this BD
-        /* default: (metadata.isIndependent() && (metadata.isConcrete()||(metadata.isAbstract() && metadata.hasAnnotatedMethods(Lookup.class.getName())))); */
+        /*
+         * default: (metadata.isIndependent() && (metadata.isConcrete()||
+         * (metadata.isAbstract() && metadata.hasAnnotatedMethods(Lookup.class.getName()))));
+         */
         return metadata.hasAnnotation("com.rpc.annotation.RpcReference") &&
                 metadata.isInterface() && metadata.isIndependent();  //not dependent on an enclosing class
     }
