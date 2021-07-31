@@ -44,8 +44,7 @@ public class InvokeHandler extends ChannelInboundHandlerAdapter {
 
         if(request.getMessageType() == MessageType.HEARTBEAT){
             logger.info("===== received heartbeat successful ======");   //ping
-            ResponseImpl response = new ResponseImpl(requestId, ResponseStatus.OK);
-            response.setMessageType(request.getMessageType());
+            ResponseImpl response = new ResponseImpl(requestId, request.getMessageType(), ResponseStatus.OK);
             ctx.channel().writeAndFlush(response);  //pong  "i'm alive"
         }else if(request.getMessageType() == MessageType.SERVER){
             NettyRequestInfo.requestNumOnHandling.incrementAndGet();
@@ -69,11 +68,11 @@ public class InvokeHandler extends ChannelInboundHandlerAdapter {
             Method method = clz.getMethod(request.getMethodName(), request.getParaClassTypes());
             Object result = method.invoke(bean, request.getArgs());
             Class<?> resultClass = result.getClass();
+
             // new response
-            ResponseImpl response = new ResponseImpl(request.getRequestId(), ResponseStatus.OK);
+            ResponseImpl response = new ResponseImpl(request.getRequestId(), MessageType.SERVER, ResponseStatus.OK);
             logger.debug("======== new response created =======");
             response.setRequestClz(clz);
-            response.setMessageType(request.getMessageType());
             response.setServerName(Constant.LOCAL_ADDRESS);
 
             if (result == null || result instanceof Void) {
@@ -110,7 +109,7 @@ public class InvokeHandler extends ChannelInboundHandlerAdapter {
                     }else {
                         NettyRequestInfo.requestMapFailed.put(requestId, client);
                         logger.warn("=== fail for sending response!");
-                        ResponseImpl response1 = new ResponseImpl(MessageType.DISCONNECT);   //say bye
+                        ResponseImpl response1 = new ResponseImpl(requestId, MessageType.DISCONNECT, ResponseStatus.ERROR);   //say bye
                         response1.setContent(ctx.channel().localAddress() + " will disconnect with you");
                         response1.setServerName(Constant.LOCAL_ADDRESS);
                         future.channel().writeAndFlush(response1);
@@ -125,30 +124,26 @@ public class InvokeHandler extends ChannelInboundHandlerAdapter {
             });
         } catch (ClassNotFoundException e) {
             logger.error("== service {" + request.getItfName() + "} not found error!", e);
-            ResponseImpl response = new ResponseImpl(request.getRequestId(), ResponseStatus.ERROR);
+            ResponseImpl response = new ResponseImpl(request.getRequestId(), MessageType.WARN, ResponseStatus.ERROR);
             response.setErrorMessage("service {" + request.getItfName() + "} not found error!");
-            response.setMessageType(MessageType.SERVER);
             response.setServerName(Constant.LOCAL_ADDRESS);
             ctx.channel().writeAndFlush(response);
         } catch (NoSuchMethodException e) {
             logger.error("== method {" + request.getMethodName() + "} not found error!", e);
-            ResponseImpl response = new ResponseImpl(request.getRequestId(), ResponseStatus.ERROR);
+            ResponseImpl response = new ResponseImpl(request.getRequestId(), MessageType.WARN, ResponseStatus.ERROR);
             response.setErrorMessage("== method {" + request.getMethodName() + "} not found error!");
-            response.setMessageType(MessageType.SERVER);
             response.setServerName(Constant.LOCAL_ADDRESS);
             ctx.channel().writeAndFlush(response);
         } catch (IllegalAccessException e) {
             logger.error("== IllegalAccess!", e);
-            ResponseImpl response = new ResponseImpl(request.getRequestId(), ResponseStatus.ERROR);
+            ResponseImpl response = new ResponseImpl(request.getRequestId(), MessageType.WARN, ResponseStatus.ERROR);
             response.setErrorMessage("== IllegalAccess!");
-            response.setMessageType(MessageType.SERVER);
             response.setServerName(Constant.LOCAL_ADDRESS);
             ctx.channel().writeAndFlush(response);
         } catch (InvocationTargetException e) {
             logger.error("== method {" + request.getMethodName() + "} invocation error!", e);
-            ResponseImpl response = new ResponseImpl(request.getRequestId(), ResponseStatus.ERROR);
+            ResponseImpl response = new ResponseImpl(request.getRequestId(), MessageType.WARN, ResponseStatus.ERROR);
             response.setErrorMessage("== method {" + request.getMethodName() + "} invocation error!");
-            response.setMessageType(MessageType.SERVER);
             response.setServerName(Constant.LOCAL_ADDRESS);
             ctx.channel().writeAndFlush(response);
         }
@@ -166,7 +161,7 @@ public class InvokeHandler extends ChannelInboundHandlerAdapter {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable t){
         if(t instanceof RejectedExecutionException){
             logger.error("==== server busy error! channel: " + ctx.channel());
-            ResponseImpl response = new ResponseImpl("", ResponseStatus.ERROR);
+            ResponseImpl response = new ResponseImpl("null", MessageType.WARN, ResponseStatus.ERROR);
             response.setErrorMessage("==== system busy, please try again later!");
             ctx.channel().writeAndFlush(response);
         }
@@ -189,12 +184,12 @@ public class InvokeHandler extends ChannelInboundHandlerAdapter {
                 }
                 Integer times = (Integer)attr.get();
                 if(times++ <= Constant.IDLE_TIMES){
-                    ResponseImpl response = new ResponseImpl(MessageType.HEARTBEAT);  //keep heart "i'm alive"
+                    ResponseImpl response = new ResponseImpl("null", MessageType.HEARTBEAT, ResponseStatus.OK);  //keep heart "i'm alive"
                     ctx.channel().writeAndFlush(response);
                     attr.set(times);
                 }else {
                     logger.debug(ctx.channel().remoteAddress() + " with idle event: " + eventType);
-                    ResponseImpl response = new ResponseImpl(MessageType.DISCONNECT); //say bye to warn consumer to update channel ache
+                    ResponseImpl response = new ResponseImpl("null", MessageType.DISCONNECT, ResponseStatus.OK); //say bye to warn consumer to update channel ache
                     response.setContent(ctx.channel().localAddress() + " will disconnect with you");
                     response.setServerName(Constant.LOCAL_ADDRESS);
                     ctx.channel().writeAndFlush (response);

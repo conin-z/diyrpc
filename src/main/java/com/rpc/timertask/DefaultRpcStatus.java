@@ -6,6 +6,9 @@ import org.apache.log4j.Logger;
 
 /**
  * OS-related information: memory usage, CPU, number of threads in the current process
+ *
+ * @user KyZhang
+ * @date
  */
 public class DefaultRpcStatus implements RpcStatus {
 
@@ -44,7 +47,7 @@ public class DefaultRpcStatus implements RpcStatus {
     }
 
     @Override
-    public void alter(RpcCriterion condition, Object... inputs) {
+    public void alter(RpcCriterion condition, Object input) {
 
     }
 

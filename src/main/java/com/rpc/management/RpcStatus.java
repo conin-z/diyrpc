@@ -1,6 +1,11 @@
 package com.rpc.management;
 
-
+/**
+ * RPC-related status in the processes
+ *
+ * @user KyZhang
+ * @date
+ */
 public interface RpcStatus{
 
     /**
@@ -10,11 +15,11 @@ public interface RpcStatus{
 
     /**
      * to change status
-     * @see RpcCriterion
      *
+     * @see RpcCriterion
      * @param condition   the trigger condition have to be met if want to change status
-     * @param inputs    some of the parameters needed when altering
+     * @param input    some of the parameters needed when altering
      */
-    void alter(RpcCriterion condition, Object... inputs);
+    void alter(RpcCriterion condition, Object input);
 
 }

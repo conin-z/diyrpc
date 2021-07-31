@@ -29,11 +29,18 @@ public abstract class AbstractNettySocketConfig implements SocketConfig{
 
 
     @Override
-    public void init(){
+    public final void init(){
         if (loggingHandler == null) {
             loggingHandler = new LoggingHandler(loggingLevel);
         }
+        doOtherInit();
     }
+
+
+    /**
+     * implemented by subclasses
+     */
+    protected abstract void doOtherInit();
 
 
     /**

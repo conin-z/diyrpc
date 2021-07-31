@@ -9,10 +9,16 @@ import com.rpc.management.RpcStatus;
 public interface SocketConfig extends RpcStatus{
 
     void init();
-    void close();
+
 
     /**
-     * used by clients
+     * shutdown of resources; such as the graceful shutdown of workgroups
+     */
+    void close();
+
+
+    /**
+     * will used by clients
      *
      * @param ip
      * @param port

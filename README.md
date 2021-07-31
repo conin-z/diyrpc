@@ -1,6 +1,10 @@
+### 文档说明书
+
+https://shimo.im/docs/Kg8yxQrRG3tjcp3X
+
+
+
 ### 使用指南
-
-
 
 - 使用IDEA打开三个工程：
 
@@ -101,11 +105,16 @@ client端会有【**本地缓存**】的更新（增加）：
   === no service provider in register center! ===
   ```
 
-- 三个工程正常运行一段时间后，先后退出`rpc_test_server`工程和`rpc_server`工程 ：
+- 三个工程正常运行一段时间后
+
+  ```java
+  // 无论是server还是client，都可以观察到由日志框架定期打印的RPC状态信息
+  ```
+
+- 先后退出`rpc_test_server`工程和`rpc_server`工程 ：
 
 ```java
-观察client端收到的信息：
-// ...
+// client:
 []
 {}
 {rpc.service.ServiceA=[], rpc.service.ServiceC=[]}

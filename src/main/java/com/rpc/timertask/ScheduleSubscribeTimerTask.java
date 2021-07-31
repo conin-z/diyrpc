@@ -6,6 +6,9 @@ import org.apache.log4j.Logger;
 
 /**
  * the task of regular subscription from the central service list to update the local cache
+ *
+ * @user KyZhang
+ * @date
  */
 public class ScheduleSubscribeTimerTask extends AbstractTimerTask {
 

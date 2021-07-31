@@ -4,9 +4,10 @@ import com.rpc.consumer.proxy.RpcItfScanner;
 import com.rpc.management.AbstractRpcConfig;
 import com.rpc.management.GracefulShutdownListener;
 import com.rpc.management.RpcStatus;
+import com.rpc.provider.ServerRpcConfig;
 import com.rpc.registerconfig.RegisterCenterConfig;
 import com.rpc.management.RpcConfig;
-import com.rpc.socket.NettyClientSocketConfig;
+import com.rpc.socket.ClientNettySocketConfig;
 import com.rpc.consumer.subscriber.ServiceSubscriber;
 import com.rpc.selector.ServerSelector;
 import com.rpc.exception.AppException;
@@ -31,24 +32,27 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 
 /**
- * entrance for client;
+ * entrance for client (service consumer);
  * associated with one client;
  * associated with one 'ServerInfo';
  *
+ * @see ServerRpcConfig
  * @user KyZhang
  * @date
  */
 public class ClientRpcConfig extends AbstractRpcConfig implements RpcConfig, BeanDefinitionRegistryPostProcessor, DisposableBean {
 
     private static final Logger logger = Logger.getLogger(ClientRpcConfig.class);
-
+    /** aware by Spring */
     public static ApplicationContext applicationContext;
+    /** the classpath for scanning the remote service interfaces */
+    protected String[] itfPaths; // set by client
+    /** load balancing */
+    protected ServerSelector serverSelector; //default Random way; can be set by user
+    /** regular subscription task to update the local cache */
+    protected ScheduleSubscribeTimerTask cacheRefreshTask;
+    protected long synSubscriptSeconds = 30;  // can be set by client
 
-    private String[] itfPaths; //for scan service interfaces   --by consumer set
-    private ServerSelector serverSelector; //default Random way; // load balancing  //can be set by user
-
-    private ScheduleSubscribeTimerTask cacheRefreshTask;
-    private long synSubscriptSeconds = 30;  // --by client set
     public static AtomicInteger numRpcServiceNeed = new AtomicInteger();
     public static AtomicInteger numRpcRequestDone = new AtomicInteger();
 
@@ -56,15 +60,16 @@ public class ClientRpcConfig extends AbstractRpcConfig implements RpcConfig, Bea
     public ClientRpcConfig(RegisterCenterConfig registerCenter, ServiceSubscriber subscriber) {
         this.registerCenter = registerCenter;
         if(RpcStatus.class.isAssignableFrom(registerCenter.getClass())){
-            registerCenterObserver.setStatus(registerCenter);
+            registerCenterObserver.setStates(registerCenter);
         }
         this.serviceSubscriber = subscriber;
     }
 
 
     /**
-     * offline for rpc service
-     * when user does not call the method of ioc's registerShutHook()
+     * offline RPC
+     * when user does not call the method of Spring IoC's registerShutHook(),
+     * this way of code block will work
      *
      * @see #destroy()
      */
@@ -126,8 +131,8 @@ public class ClientRpcConfig extends AbstractRpcConfig implements RpcConfig, Bea
     @Override
     public void checkSocket() {
         if (socketConfig == null) {
-            socketConfig = new NettyClientSocketConfig();  // default here
-            socketObserver.setStatus(socketConfig);
+            socketConfig = new ClientNettySocketConfig();  // default here
+            socketObserver.setStates(socketConfig);
         }  // socket part; in case of null
         socketConfig.init();
         logger.info("====== init client's RPC socket successful! ====== ");

@@ -28,21 +28,21 @@ public class ResponseHandler extends SimpleChannelInboundHandler<ResponseImpl> {
     private static final Logger logger = Logger.getLogger(ResponseHandler.class);
 
     protected void channelRead0(ChannelHandlerContext ctx, ResponseImpl msg) throws Exception {
-        if (msg.getMessageType() == MessageType.DISCONNECT){  //received
+        if (msg.getMessageType() == MessageType.DISCONNECT){
             logger.debug(msg.getContent());
             /* to update cache or retry (reconnect) immediately
                here we update cache, could reconnect when refreshing caches by scheduled task */
             String server = msg.getServerName();
             ServerInfo.removeServer(server);
 
-        }else if(msg.getMessageType() == MessageType.SERVER){
+        }else if(msg.getMessageType() == MessageType.SERVER){  // received
             logger.debug("====== received response" + msg + " from server regarding request " + msg.getRequestId());
             /*
-             * upload the msg to the MQ server  -->design APIs:
+             * TODO: upload the msg to the MQ server  -->design APIs:
              *      1.MQConfig / xx.xml
              *      2.MQTask(event):  public abstract class AbstractKafkaPushTask { sendMessage(msg);
-             *      3.MQConsumer(listener):  class NettyKafkaConsumerListener implements MessageListener<String, String>  //org.springframework.kafka.listener.MessageListener
-             *
+             *      3.MQConsumer(listener):  class NettyKafkaConsumerListener implements MessageListener<String, String>
+             *                               //org.springframework.kafka.listener.MessageListener
              */
             SynchronousQueue<ResponseImpl> responses = ServerInfo.msgTransferMap.get(msg.getRequestId());
             responses.put(msg);
@@ -51,10 +51,9 @@ public class ResponseHandler extends SimpleChannelInboundHandler<ResponseImpl> {
     }
 
     /**
-     * -------------------here:
+     * here:
      * an IDleStateEvent event is published when the idle time (read or write) of connection is too long;
-     * then, override the userEventTriggered() method in customized ChannelInboundHandler to handle this event.
-     * --->
+     * then, override the userEventTriggered() method in customized ChannelInboundHandler to handle this event
      *
      * @param ctx
      * @param evt
@@ -74,7 +73,7 @@ public class ResponseHandler extends SimpleChannelInboundHandler<ResponseImpl> {
                 }
                 Integer times = (Integer)attr.get();
                 if(times++ <= 3){
-                    RequestImpl request = new RequestImpl(MessageType.HEARTBEAT);   //keep heart
+                    RequestImpl request = new RequestImpl("null", MessageType.HEARTBEAT);   //keep heart
                     ctx.channel().writeAndFlush(request);
                     attr.set(times);
                 }else {

@@ -14,20 +14,16 @@ import io.netty.channel.socket.nio.NioSocketChannel;
 import org.apache.log4j.Logger;
 
 
-public class NettyClientSocketConfig extends AbstractNettySocketConfig implements SocketConfig{
+public class ClientNettySocketConfig extends AbstractNettySocketConfig implements SocketConfig{
 
-    private static final Logger logger = Logger.getLogger(NettyClientSocketConfig.class);
+    private static final Logger logger = Logger.getLogger(ClientNettySocketConfig.class);
 
     private NioEventLoopGroup worker;
     private Bootstrap bootstrap;
 
 
-    /**
-     * for consumer
-     *
-     */
-    public void init() {
-        super.init();
+    //  for consumer
+    protected void doOtherInit() {
         super.readerIdleTime = 0l;
         super.allIdleTime = 1l;
         worker = new NioEventLoopGroup(Constant.NETTY_WORKER_GROUP);
@@ -87,7 +83,7 @@ public class NettyClientSocketConfig extends AbstractNettySocketConfig implement
     }
 
     @Override
-    public void alter(RpcCriterion condition, Object... inputs) {
+    public void alter(RpcCriterion condition, Object input) {
 
     }
 

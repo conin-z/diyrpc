@@ -13,6 +13,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * to record the status of request
  * used in {@link InvokeHandler}
+ *
+ * @user KyZhang
+ * @date
  */
 public final class NettyRequestInfo implements RpcStatus {
 
@@ -66,7 +69,7 @@ public final class NettyRequestInfo implements RpcStatus {
     }
 
     @Override
-    public void alter(RpcCriterion condition, Object... inputs) {
+    public void alter(RpcCriterion condition, Object input) {
 
     }
 

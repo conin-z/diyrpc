@@ -12,14 +12,13 @@ import java.util.Properties;
 
 
 /**
- * association with (as constructor parameter of) the instance of <code>RpcConfig<code/>;
+ * association with (as constructor parameter of) the instance of {@code RpcConfig};
  *
- * since coupled to Jedis, <code>RedisRegisterCenterConfig<code/> is set to final now
+ * since coupled to Jedis, {@code RedisRegisterCenterConfig} is set to final now
  * TODO: will refactor later so as to be able to use Redisson and others [extensibility]
  *
  * @see ServerRpcConfig
  * @see ClientRpcConfig
- *
  * @user KyZhang
  * @date
  */
@@ -130,7 +129,7 @@ public final class RedisRegisterCenterConfig implements RegisterCenterConfig {
 
 
     @Override
-    public void alter(RpcCriterion condition, Object... inputs) {
+    public void alter(RpcCriterion condition, Object input) {
 
     }
 

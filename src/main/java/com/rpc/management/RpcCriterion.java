@@ -1,9 +1,11 @@
 package com.rpc.management;
 
 /**
- * @see RpcStatus
+ * TODO: later will be completed
  *
- *  TODO: later will be completed
+ * @see RpcStatus
+ * @user KyZhang
+ * @date
  */
 public interface RpcCriterion {
 

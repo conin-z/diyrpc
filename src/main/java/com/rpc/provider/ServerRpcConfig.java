@@ -14,7 +14,7 @@ import com.rpc.management.RpcConfig;
 import com.rpc.management.RpcStatus;
 import com.rpc.registerconfig.*;
 import com.rpc.provider.registry.ServiceRegistry;
-import com.rpc.socket.NettyServerSocketConfig;
+import com.rpc.socket.ServerNettySocketConfig;
 import com.rpc.utils.Constant;
 
 import com.rpc.timertask.ExpireTimerTask;
@@ -27,7 +27,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.event.ContextRefreshedEvent;
 
 /**
- * entrance for server
+ * entrance for server (service provider)
  *
  * @user KyZhang
  * @date
@@ -36,10 +36,14 @@ public class ServerRpcConfig extends AbstractRpcConfig implements RpcConfig, Bea
 
     private static final Logger logger = Logger.getLogger(ServerRpcConfig.class);
 
+    /** aware by Spring */
     public static ApplicationContext applicationContext;
-    private int port;
 
-    private ExpireTimerTask expireTimerTask;
+    /** the task to set/keep keys' life regularly with register center */
+    protected int port;
+
+    /** the task to set/keep keys' life regularly with register center */
+    protected ExpireTimerTask expireTimerTask;
 
     private static AtomicInteger numRpcServiceProvided = new AtomicInteger();
 
@@ -73,7 +77,7 @@ public class ServerRpcConfig extends AbstractRpcConfig implements RpcConfig, Bea
         this.registerCenter = registerCenter;
         this.serviceRegistry = registry;
         if(RpcStatus.class.isAssignableFrom(registerCenter.getClass())){
-            registerCenterObserver.setStatus(registerCenter);
+            registerCenterObserver.setStates(registerCenter);
         }
     }
 
@@ -143,8 +147,8 @@ public class ServerRpcConfig extends AbstractRpcConfig implements RpcConfig, Bea
            throw new AppException("======= find server address error! =======");
         }
         if (this.socketConfig == null) {
-            socketConfig = new NettyServerSocketConfig(port); // if not set by user, use default: NettyConfig
-            socketObserver.setStatus(socketConfig);
+            socketConfig = new ServerNettySocketConfig(port); // if not set by user, use default: NettyConfig
+            socketObserver.setStates(socketConfig);
         }
         socketConfig.init();
         logger.info("====== init server's RPC socket successful! ====== ");
@@ -168,6 +172,7 @@ public class ServerRpcConfig extends AbstractRpcConfig implements RpcConfig, Bea
         isRegistered = true;  // all remote services and server itself have been registered
         onlineMoment = System.currentTimeMillis();
         logger.info("============= register server successful! providing { " + numRpcServiceProvided + " } RPC service APIs ======");
+
         startDefaultTimerTasks();
         logger.info("============= server's default timer tasks begin to run ============");
     }

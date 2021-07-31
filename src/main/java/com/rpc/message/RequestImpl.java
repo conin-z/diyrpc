@@ -13,20 +13,19 @@ public class RequestImpl implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private String requestId;  // currentMilli
-    private String itfName;
-    private Class<?> itf;
-    private String methodName;
-    private String responseType;
-    private Object[] args;
-    private MessageType messageType;
-    private Class<?>[] paraClassTypes;
+    protected final String requestId;  // by currentMilli
+    protected final MessageType messageType;
+
+    protected String itfName;
+    protected Class<?> itf;
+    protected String methodName;
+    protected String responseType;
+    protected Object[] args;
+    protected Class<?>[] paraClassTypes;
 
 
-    public RequestImpl() {
-    }
-
-    public RequestImpl(MessageType messageType) {
+    public RequestImpl(String id, MessageType messageType) {
+        this.requestId = id;
         this.messageType = messageType;
     }
 
@@ -46,16 +45,8 @@ public class RequestImpl implements Serializable {
         return requestId;
     }
 
-    public void setRequestId(String requestId) {
-        this.requestId = requestId;
-    }
-
     public MessageType getMessageType() {
         return messageType;
-    }
-
-    public void setMessageType(MessageType messageType) {
-        this.messageType = messageType;
     }
 
     public void setItfName(String itfName) {

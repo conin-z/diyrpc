@@ -50,7 +50,7 @@ public class RpcItfScanner extends ClassPathBeanDefinitionScanner
 
 
     /**
-     * for rpc, open interface(api) for a certain service is must
+     * for rpc, open interface(API) for a certain service is must
      *
      * @param beanDefinition
      * @return

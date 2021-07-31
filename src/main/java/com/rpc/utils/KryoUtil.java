@@ -13,18 +13,19 @@ import org.objenesis.strategy.StdInstantiatorStrategy;
 
 import io.netty.buffer.ByteBufInputStream;
 
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
 
 /**
- * see: https://www.cnblogs.com/hntyzgn/p/7122709.html
- *
  * @user KyZhang
  * @date
  */
 public class KryoUtil {
+
+    public static String encoding = "UTF-8";
 
     /**
      * using ThreadLocal to ensure thread safety
@@ -88,8 +89,8 @@ public class KryoUtil {
     /**
      * serializes objects [with types] into byte arrays
      * usage : directly  -->
-     * @see KryoEncoder
      *
+     * @see KryoEncoder
      * @param obj
      * @param <T>
      * @return
@@ -100,7 +101,7 @@ public class KryoUtil {
         //
         Kryo kryo = getInstance();
         try {
-            kryo.writeClassAndObject(output, obj);  //~
+            kryo.writeClassAndObject(output, obj);  //
             output.flush();
         } finally {
             kryoLocal.remove();
@@ -127,7 +128,7 @@ public class KryoUtil {
      */
     public static <T> String writeToString(T obj) {
         try {
-            return new String(Base64.encodeBase64(writeToByteArray(obj)),"UTF-8");
+            return new String(Base64.encodeBase64(writeToByteArray(obj)), encoding);
         } catch (UnsupportedEncodingException e) {
             throw new IllegalStateException(e);
         }
@@ -138,19 +139,32 @@ public class KryoUtil {
      * usage : directly  -->
      * @see KryoDecoder
      *
-     * @param byteArray
+     * @param byteBuf
      * @param <T>
      * @return
      */
     @SuppressWarnings("unchecked")
-    public static <T> T readFromByteArray(ByteBuf byteArray) {
-        ByteBufInputStream byteArrayInputStream = new ByteBufInputStream(byteArray);
+    public static <T> T readFromByteBuf(ByteBuf byteBuf) {
+        ByteBufInputStream byteArrayInputStream = new ByteBufInputStream(byteBuf);
         Input input = new Input(byteArrayInputStream);
-        //
+
         Kryo kryo = getInstance();
         T t = (T) kryo.readClassAndObject(input);
         kryoLocal.remove();
         return t;
+    }
+
+
+    public static <T> T readFromString(String str) {
+        try {
+            ByteArrayInputStream byteArrayInputStream =new ByteArrayInputStream(Base64.decodeBase64(str.getBytes(encoding)));
+            Input input =new Input(byteArrayInputStream);
+
+            Kryo kryo = getInstance();
+            return (T) kryo.readClassAndObject(input);
+        }catch (UnsupportedEncodingException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
 }

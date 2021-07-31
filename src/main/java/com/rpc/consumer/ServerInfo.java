@@ -211,10 +211,10 @@ public final class ServerInfo implements RpcStatus {
      * [TODO]
      *
      * @param condition   the trigger condition have to be met if want to change status
-     * @param inputs    some of the parameters needed when altering
+     * @param input    some of the parameters needed when altering
      */
     @Override
-    public void alter(RpcCriterion condition, Object... inputs) {
+    public void alter(RpcCriterion condition, Object input) {
 
     }
 

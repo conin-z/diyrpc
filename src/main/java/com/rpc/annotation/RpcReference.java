@@ -3,7 +3,7 @@ package com.rpc.annotation;
 import java.lang.annotation.*;
 
 /**
- * like [Dubbo]'s @Reference;
+ * like {@code Dubbo}'s @Reference;
  * for subscription
  *
  * @user KyZhang

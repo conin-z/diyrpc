@@ -14,30 +14,25 @@ public class ResponseImpl implements Serializable {
 
     private static final long serialVersionUID = 2L;
 
-    private String requestId;
-    private Class<?> requestClz;
+    protected final String requestId;
+    protected final MessageType messageType;
+    protected final ResponseStatus responseStatus;
 
-    private MessageType messageType;
-    private ResponseStatus responseStatus;
-    private String errorMessage;
-    private String content;
-    private Class<?> resultType;
-    private boolean isArray;
-    private Class<?> arrayType;
-    private boolean isCollection;
-    private Class<?> collectionType;
+    protected Class<?> requestClz;
+    protected String errorMessage;
+    protected String content;
+    protected Class<?> resultType;
+    protected boolean isArray;
+    protected Class<?> arrayType;
+    protected boolean isCollection;
+    protected Class<?> collectionType;
 
-    private String serverName;
+    protected String serverName;  // when say bye
 
-    public ResponseImpl() { }
-
-    public ResponseImpl(String requestId, ResponseStatus status) {
+    public ResponseImpl(String requestId, MessageType messageType, ResponseStatus status) {
         this.requestId = requestId;
-        this.responseStatus = status;
-    }
-
-    public ResponseImpl(MessageType messageType) {
         this.messageType = messageType;
+        this.responseStatus = status;
     }
 
     public Object returnObj() {
@@ -111,24 +106,12 @@ public class ResponseImpl implements Serializable {
         return responseStatus;
     }
 
-    public void setResponseStatus(ResponseStatus responseStatus) {
-        this.responseStatus = responseStatus;
-    }
-
     public String getRequestId() {
         return requestId;
     }
 
-    public void setRequestId(String requestId) {
-        this.requestId = requestId;
-    }
-
     public MessageType getMessageType() {
         return messageType;
-    }
-
-    public void setMessageType(MessageType messageType) {
-        this.messageType = messageType;
     }
 
     public String getServerName() {

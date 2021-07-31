@@ -7,6 +7,9 @@ import org.apache.log4j.Logger;
 
 /**
  * the task to set/keep keys' life regularly with register center
+ *
+ * @user KyZhang
+ * @date
  */
 public class ExpireTimerTask extends AbstractTimerTask {
 

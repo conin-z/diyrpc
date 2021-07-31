@@ -15,8 +15,7 @@ import java.util.List;
 public class KryoDecoder extends ByteToMessageDecoder {
 
     /**
-     * @see KryoUtil#readFromByteArray(ByteBuf) 
-     *
+     * @see KryoUtil#readFromByteBuf(ByteBuf)
      * @param ctx
      * @param in
      * @param out
@@ -28,7 +27,7 @@ public class KryoDecoder extends ByteToMessageDecoder {
             out.add(null);
         }
         if (in.readableBytes() > 0) {
-            Object o = KryoUtil.readFromByteArray(in);
+            Object o = KryoUtil.readFromByteBuf(in);
             out.add(o);
         }else{
             out.add(null);

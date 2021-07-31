@@ -42,7 +42,7 @@ public abstract class AbstractRpcConfig implements RpcConfig {
     public void checkRegistry() {
         if(this.registerCenter == null || this.serviceRegistry == null){
             registerCenter = new RedisRegisterCenterConfig();   // default
-            registerCenterObserver.setStatus(registerCenter);
+            registerCenterObserver.setStates(registerCenter);
             serviceRegistry = new RedisServiceRegistry(); // default: Redis way
         }
     }
@@ -52,7 +52,7 @@ public abstract class AbstractRpcConfig implements RpcConfig {
     public void checkSubscriber() {
         if(this.serviceSubscriber == null ||  this.registerCenter == null){
             registerCenter = new RedisRegisterCenterConfig();  // keep consistent with serviceSubscriber
-            registerCenterObserver.setStatus(registerCenter);
+            registerCenterObserver.setStates(registerCenter);
             serviceSubscriber = new RedisServiceSubscriber();
         } // in case of null
     }
@@ -111,7 +111,7 @@ public abstract class AbstractRpcConfig implements RpcConfig {
 
     public void setSocketConfig(SocketConfig socketConfig) {
         this.socketConfig = socketConfig;
-        socketObserver.setStatus(socketConfig);
+        socketObserver.setStates(socketConfig);
     }
 
     public RegisterCenterConfig getRegisterCenter() {
@@ -120,7 +120,7 @@ public abstract class AbstractRpcConfig implements RpcConfig {
 
     public void setRegisterCenter(RegisterCenterConfig registerCenter) {
         this.registerCenter = registerCenter;
-        registerCenterObserver.setStatus(registerCenter);
+        registerCenterObserver.setStates(registerCenter);
     }
 
     public void setServiceSubscriber(ServiceSubscriber serviceSubscriber) {

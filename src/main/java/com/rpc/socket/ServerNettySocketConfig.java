@@ -12,9 +12,9 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import org.apache.log4j.Logger;
 
 
-public class NettyServerSocketConfig extends AbstractNettySocketConfig implements SocketConfig{
+public class ServerNettySocketConfig extends AbstractNettySocketConfig implements SocketConfig{
 
-    private static final Logger logger = Logger.getLogger(NettyServerSocketConfig.class);
+    private static final Logger logger = Logger.getLogger(ServerNettySocketConfig.class);
 
     // TODO: here could add MQConfig
     private NioEventLoopGroup worker;
@@ -22,16 +22,13 @@ public class NettyServerSocketConfig extends AbstractNettySocketConfig implement
     private NioEventLoopGroup boss;
     private int port;
 
-    public NettyServerSocketConfig(int port) {
+    public ServerNettySocketConfig(int port) {
         this.port = port;
     }
 
 
-    /**
-     * for server
-     */
-    public void init() {
-        super.init();
+    //  for server
+    protected void doOtherInit() {
         worker = new NioEventLoopGroup(Constant.NETTY_WORKER_GROUP);
         boss = new NioEventLoopGroup(Constant.NETTY_BOSS_GROUP);
         serverBootstrap = new ServerBootstrap();
@@ -83,7 +80,7 @@ public class NettyServerSocketConfig extends AbstractNettySocketConfig implement
     }
 
     @Override
-    public void alter(RpcCriterion condition, Object... inputs) {
+    public void alter(RpcCriterion condition, Object input) {
 
     }
 

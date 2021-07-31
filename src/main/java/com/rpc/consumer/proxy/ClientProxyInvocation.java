@@ -10,6 +10,7 @@ import com.rpc.message.*;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelFuture;
 import org.apache.log4j.Logger;
+import org.springframework.lang.Nullable;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -34,17 +35,24 @@ public class ClientProxyInvocation implements InvocationHandler {
     public ClientProxyInvocation() {
     }
 
-    public Object invoke(Object proxy, Method method, Object[] args) throws InterruptedException, AppException {
+    /**
+     *
+     * @param proxy
+     * @param method
+     * @param args
+     * @return    can be null when fail to call
+     * @throws InterruptedException
+     * @throws AppException
+     */
+    public @Nullable Object invoke(Object proxy, Method method, Object[] args) throws InterruptedException, AppException {
         ClientRpcConfig consumer = ClientRpcConfig.applicationContext.getBean(ClientRpcConfig.class);
         ServerSelector selector = consumer.getServerSelector();
         if (selector == null) {
             selector = new RandomServerSelector();  // here default
             consumer.setServerSelector(selector);
         }
-        // new request
-        RequestImpl request = new RequestImpl(MessageType.SERVER);
         // request.setRequestId(String.valueOf(System.currentTimeMillis()));
-        request.setRequestId(UUID.randomUUID().toString());  //
+        RequestImpl request = new RequestImpl(UUID.randomUUID().toString(), MessageType.SERVER);
         request.setItf(itfClass);
         request.setItfName(itfClass.getName());
         request.setMethodName(method.getName());
@@ -73,7 +81,9 @@ public class ClientProxyInvocation implements InvocationHandler {
 
             // get result
             try {
-                response = responses.take();  // retrieves and removes the head of this queue
+
+                response = responses.take();  // retrieve and remove
+
             } catch (InterruptedException e) {
                 logger.error("==== fail to get results of the method: " + method.getName() + "() ====");
                 return null;
@@ -82,6 +92,13 @@ public class ClientProxyInvocation implements InvocationHandler {
         } finally {
             ServerInfo.msgTransferMap.remove(request.getRequestId());   // get response
             ClientRpcConfig.numRpcRequestDone.incrementAndGet();
+        }
+
+        // if warn
+        if(response.getMessageType() == MessageType.WARN){
+            // TODO: re-send strategy
+            logger.error(response.getErrorMessage());
+            return null;  // now: directly return null to user
         }
 
         // several types for response (ERROR, OK)
@@ -103,7 +120,7 @@ public class ClientProxyInvocation implements InvocationHandler {
      * @param request
      * @return   if false: no provider for this service or the provider selected is invalid
      */
-    private boolean send(ServerSelector selector, RequestImpl request) throws InterruptedException {
+    protected boolean send(ServerSelector selector, RequestImpl request) throws InterruptedException {
         String itfName = request.getItfName();
         Set<String> serverSet = ServerInfo.itfServersMap.get(itfName);
         if(serverSet != null && serverSet.size() > 0) {
