@@ -27,6 +27,7 @@ com\rpc\selector\RandomServerSelector.class
 com\rpc\provider\ServerRpcConfig.class
 com\rpc\socket\nettyhandler\KryoDecoder.class
 com\rpc\utils\StringUtil$1.class
+com\rpc\socket\ServerNettySocketConfig.class
 com\rpc\timertask\StatusObserver.class
 com\rpc\consumer\proxy\ClientProxyInvocation.class
 com\rpc\management\RpcConfig.class
@@ -37,12 +38,11 @@ com\rpc\socket\nettyhandler\KryoEncoder.class
 com\rpc\timertask\ExpireTimerTask.class
 com\rpc\consumer\subscriber\ServiceSubscriber.class
 com\rpc\socket\nettyhandler\InvokeHandler.class
-com\rpc\socket\NettyServerSocketConfig.class
 com\rpc\timertask\DefaultRpcStatus.class
 com\rpc\selector\ServerSelector.class
+com\rpc\socket\ClientNettySocketConfig.class
 com\rpc\socket\nettyhandler\ResponseHandler.class
 com\rpc\management\RpcStatus.class
-com\rpc\socket\NettyClientSocketConfig.class
 com\rpc\socket\SocketConfig.class
 com\rpc\consumer\proxy\RpcItfScanner.class
 com\rpc\message\ResponseStatus.class
