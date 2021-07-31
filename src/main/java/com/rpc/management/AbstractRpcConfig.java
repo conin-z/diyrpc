@@ -27,8 +27,8 @@ public abstract class AbstractRpcConfig implements RpcConfig {
     /** ---------- scheduled timer-related ---------- */
     protected int corePoolSizeForConcurrentTimer = 5;
     protected static ScheduledThreadPoolExecutor timer;
-    protected StatusObserver socketObserver =  new StatusObserver(new DefaultRpcStatus());;
-    protected StatusObserver registerCenterObserver = new StatusObserver(new DefaultRpcStatus());;
+    protected StatusObserver socketObserver =  new StatusObserver(new DefaultRpcStatus());
+    protected StatusObserver registerCenterObserver = new StatusObserver(new DefaultRpcStatus());
     protected long socketObservePeriod = 60l;
     protected long socketObserveDelay = 60l;
     protected long centerObservePeriod = 60l;

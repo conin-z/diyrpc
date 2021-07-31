@@ -121,8 +121,9 @@ public class RedisServiceRegistry implements ServiceRegistry{
         checkPool();
         long res;
         try(Jedis resource = pool.getResource()) {
+            // remove itself from register center
             res = resource.del(key);
-            /* OFFLINE msg to listener */
+            // OFFLINE msg to listener
             Long listenerNum = resource.publish(Constant.OFFLINE, key);
             logger.info("================ send OFFLINE msg to listeners of number { " + listenerNum + " }  ===============");
         }

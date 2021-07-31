@@ -29,12 +29,12 @@ public class ResponseHandler extends SimpleChannelInboundHandler<ResponseImpl> {
 
     protected void channelRead0(ChannelHandlerContext ctx, ResponseImpl msg) throws Exception {
         if (msg.getMessageType() == MessageType.DISCONNECT){
+            // be idle too long, received a good-bye message from server
             logger.debug(msg.getContent());
             /* to update cache or retry (reconnect) immediately
-               here we update cache, could reconnect when refreshing caches by scheduled task */
+               here we update cache */
             String server = msg.getServerName();
             ServerInfo.removeServer(server);
-
         }else if(msg.getMessageType() == MessageType.SERVER){  // received
             logger.debug("====== received response" + msg + " from server regarding request " + msg.getRequestId());
             /*

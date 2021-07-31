@@ -104,7 +104,7 @@ public final class ServerInfo implements RpcStatus {
         }
 
         logger.info("================================= update local Service_Candidate_Caches successful! ");
-        logger.info(getCacheStatus());
+        logger.info(getServiceCacheStatus());
     }
 
 
@@ -203,7 +203,7 @@ public final class ServerInfo implements RpcStatus {
      */
     @Override
     public void show() {
-        logger.info(getCacheStatus());
+        logger.info(getServiceCacheStatus());
     }
 
 
@@ -220,16 +220,23 @@ public final class ServerInfo implements RpcStatus {
 
 
     /**
-     *
      * @return  local rpc service-related information (caches) provided for consumer
      */
-    private static String getCacheStatus() {
+    public static String getServiceCacheStatus() {
         return  "================================= { " + ClientRpcConfig.numRpcServiceNeed.get() + " } rpc service we need, and :\n" +
                 "============= rpc services we need and available candidates :\n" + itfServersMap +
                 "\n============= online servers in register center :\n" + serversList +
                 "\n============= and their containing services :\n" + servicesNameMap +
                 "\n=================================          =================================";
 
+    }
+
+    /**
+     * @return  information about remote service sockets connected
+     */
+    public static String getSocketStatus() {
+        return  "============= remote service sockets connected:\n" + serverChannelMap +
+                "\n=================================          =================================";
     }
 
 }

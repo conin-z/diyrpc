@@ -18,10 +18,10 @@ public class DefaultRpcStatus implements RpcStatus {
     @Override
     public void show() {
         Runtime runtime = Runtime.getRuntime();
-        String runtimeInfo = "processors={"+ runtime.availableProcessors() +"}, " +
-                "freeMemory={"+ runtime.freeMemory() +"B}, " +
-                "maxMemory={"+ runtime.maxMemory() +"B}, " +
-                "totalMemory={"+ runtime.totalMemory() +"B}";
+        String runtimeInfo = "processors={" + runtime.availableProcessors() + "}, " +
+                "freeMemory={" + runtime.freeMemory() + "B}, " +
+                "maxMemory={" + runtime.maxMemory() + "B}, " +
+                "totalMemory={" + runtime.totalMemory() + "B}";
 
         // following codes ref: https://www.cnblogs.com/wytings/p/4711650.html
         ThreadGroup group = Thread.currentThread().getThreadGroup();

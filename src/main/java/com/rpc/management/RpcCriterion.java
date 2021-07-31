@@ -1,7 +1,7 @@
 package com.rpc.management;
 
 /**
- * TODO: later will be completed
+ * TODO: later will be completed;
  *
  * @see RpcStatus
  * @user KyZhang
@@ -15,6 +15,5 @@ public interface RpcCriterion {
      * @param obj   the reference objects of dependency when setting
      */
     void setCondition(Object... obj);
-
-
+    
 }

@@ -127,7 +127,7 @@ public class ClientProxyInvocation implements InvocationHandler {
             String selectedServerInfo = selector.select(serverSet, request);
             Channel channel = ServerInfo.serverChannelMap.get(selectedServerInfo);
             /*
-             * could combine with RocketMQ ---> having retry [TODO]
+             * TODO: could combine with RocketMQ ---> having retry
              * here we diy using the method of self-polling
              */
             try {

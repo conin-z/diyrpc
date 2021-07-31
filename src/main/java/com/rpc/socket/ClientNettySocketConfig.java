@@ -70,7 +70,7 @@ public class ClientNettySocketConfig extends AbstractNettySocketConfig implement
 
     /**
      * with RpcObserver
-     * to show the status of RPC requests
+     * to show the states of RPC requests and socket connection
      */
     @Override
     public void show() {
@@ -78,7 +78,8 @@ public class ClientNettySocketConfig extends AbstractNettySocketConfig implement
                 ServerInfo.msgTransferMap.keySet() +
                 "\n========= RPC requests HANDLED count :\n" +
                 ClientRpcConfig.numRpcRequestDone +
-                "\n=================================          =================================";
+                "\n=================================          =================================\n" +
+                ServerInfo.getSocketStatus();
         logger.info(info);
     }
 

@@ -180,7 +180,7 @@ public class ClientRpcConfig extends AbstractRpcConfig implements RpcConfig, Bea
                 }
                 disconnect();  // disconnect
                 if (socketConfig != null) {
-                    socketConfig.close();  //socket
+                    socketConfig.close();
                 }
                 registerCenter.close();
                 ServerInfo.clear();

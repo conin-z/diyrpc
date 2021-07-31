@@ -1,7 +1,15 @@
 package com.rpc.timertask;
 
+import com.rpc.consumer.ServerInfo;
 import com.rpc.management.RpcCriterion;
 import com.rpc.management.RpcStatus;
+import com.rpc.registerconfig.RedisRegisterCenterConfig;
+import com.rpc.registerconfig.RegisterCenterConfig;
+import com.rpc.socket.AbstractNettySocketConfig;
+import com.rpc.socket.ClientNettySocketConfig;
+import com.rpc.socket.ServerNettySocketConfig;
+import com.rpc.socket.SocketConfig;
+import com.rpc.socket.nettyhandler.NettyRequestInfo;
 import org.springframework.lang.NonNull;
 
 /**
@@ -9,15 +17,16 @@ import org.springframework.lang.NonNull;
  * TODO: later will be refined
  * need match with instance of {@code RpcStatus}
  *
- * @see RpcStatus (com.rpc.management)
- *          SocketConfig (com.rpc.socket)
- *              AbstractNettySocketConfig (com.rpc.socket)
- *              ServerNettySocketConfig (com.rpc.socket)
- *              NettyClientSocketConfig (com.rpc.socket)
- *          RegisterCenterConfig (com.rpc.registerconfig)
- *              RedisRegisterCenterConfig (com.rpc.registerconfig)
- *          ServerInfo (com.rpc.consumer)
- *          DefaultRpcStatus (com.rpc.timertask)
+ * @see RpcStatus
+ * @see DefaultRpcStatus
+ * @see SocketConfig
+ * @see AbstractNettySocketConfig
+ * @see ServerNettySocketConfig
+ * @see ClientNettySocketConfig
+ * @see RegisterCenterConfig
+ * @see RedisRegisterCenterConfig
+ * @see ServerInfo
+ * @see NettyRequestInfo
  *
  * @user KyZhang
  * @date

@@ -109,11 +109,14 @@ public class InvokeHandler extends ChannelInboundHandlerAdapter {
                     }else {
                         NettyRequestInfo.requestMapFailed.put(requestId, client);
                         logger.warn("=== fail for sending response!");
-                        ResponseImpl response1 = new ResponseImpl(requestId, MessageType.DISCONNECT, ResponseStatus.ERROR);   //say bye
-                        response1.setContent(ctx.channel().localAddress() + " will disconnect with you");
-                        response1.setServerName(Constant.LOCAL_ADDRESS);
-                        future.channel().writeAndFlush(response1);
-                        future.channel().close();   // like ChannelFutureListener.CLOSE_ON_FAILURE
+                        // say bye to notify consumers to update cache
+                        if (future.channel().isOpen()) {
+                            ResponseImpl resp = new ResponseImpl(requestId, MessageType.DISCONNECT, ResponseStatus.ERROR);   //say bye
+                            resp.setContent(ctx.channel().localAddress() + " will disconnect with you");
+                            resp.setServerName(Constant.LOCAL_ADDRESS);
+                            future.channel().writeAndFlush(resp);
+                            future.channel().close();   // like ChannelFutureListener.CLOSE_ON_FAILURE
+                        }
                     }
                     // publish msg
                     ServiceRegistry registry = ServerRpcConfig.applicationContext.getBean(ServerRpcConfig.class).getServiceRegistry();
@@ -184,16 +187,21 @@ public class InvokeHandler extends ChannelInboundHandlerAdapter {
                 }
                 Integer times = (Integer)attr.get();
                 if(times++ <= Constant.IDLE_TIMES){
-                    ResponseImpl response = new ResponseImpl("null", MessageType.HEARTBEAT, ResponseStatus.OK);  //keep heart "i'm alive"
+                    // keep heart "I'm alive"
+                    ResponseImpl response = new ResponseImpl("null", MessageType.HEARTBEAT, ResponseStatus.OK);
                     ctx.channel().writeAndFlush(response);
                     attr.set(times);
                 }else {
                     logger.debug(ctx.channel().remoteAddress() + " with idle event: " + eventType);
-                    ResponseImpl response = new ResponseImpl("null", MessageType.DISCONNECT, ResponseStatus.OK); //say bye to warn consumer to update channel ache
-                    response.setContent(ctx.channel().localAddress() + " will disconnect with you");
-                    response.setServerName(Constant.LOCAL_ADDRESS);
-                    ctx.channel().writeAndFlush (response);
-                    ctx.channel().close();
+                    if (ctx.channel().isOpen()) {
+                        // say bye to notify consumers, may send abortively
+                        ResponseImpl response = new ResponseImpl("null", MessageType.DISCONNECT, ResponseStatus.OK);
+                        response.setContent(ctx.channel().localAddress() + " will disconnect with you");
+                        response.setServerName(Constant.LOCAL_ADDRESS);
+                        ctx.channel().writeAndFlush (response);
+                        // disconnect
+                        ctx.channel().close();
+                    }
                 }
             }
 
