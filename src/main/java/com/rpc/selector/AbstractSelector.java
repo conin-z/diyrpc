@@ -17,11 +17,11 @@ public abstract class AbstractSelector implements ServerSelector{
     public String select(Set<String> serverListForItfClass, RequestImpl request) {
         this.serverListForItfClass = serverListForItfClass;
         this.request = request;
-        preCheck();
+        prepare();
         return doSelect(serverListForItfClass, request);
     }
 
-    protected abstract void preCheck();
+    protected abstract void prepare();
 
     protected abstract String doSelect(Set<String> serverListForItfClass, RequestImpl request);
 

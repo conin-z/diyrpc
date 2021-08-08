@@ -105,10 +105,10 @@ public class ClientRpcConfig extends AbstractRpcConfig implements RpcConfig, Bea
      * @param event
      */
     public void onApplicationEvent(ContextRefreshedEvent event) {
-        checkSocket();
-        checkSubscriber();
         logger.info("============================ { " + numRpcServiceNeed + " } RPC service we need");
         if(numRpcServiceNeed.get() > 0 && !ServerInfo.isInit.get()){
+            checkSocket();
+            checkSubscriber();
             try {
                 logger.info("============================ begin to initialize local caches after contextRefreshedEvent... ");
                 ServerInfo.refresh();
@@ -119,12 +119,12 @@ public class ClientRpcConfig extends AbstractRpcConfig implements RpcConfig, Bea
                 ((GenericApplicationContext) applicationContext).close();
                 return;
             }
+            startDefaultTimerTasks();
+            logger.info("============= default timer tasks begin to run =============");
         }
 
-        startDefaultTimerTasks();
-
         isIocStarted = true;
-        logger.info("============= Spring ioc started, and default timer tasks begin to run =============");
+        logger.info("============= Spring ioc started =============");
     }
 
 

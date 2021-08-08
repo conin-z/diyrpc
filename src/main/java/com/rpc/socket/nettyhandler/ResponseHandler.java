@@ -29,7 +29,7 @@ public class ResponseHandler extends SimpleChannelInboundHandler<ResponseImpl> {
 
     protected void channelRead0(ChannelHandlerContext ctx, ResponseImpl msg) throws Exception {
         if (msg.getMessageType() == MessageType.DISCONNECT){
-            // be idle too long, received a good-bye message from server
+            // be idle too long (other reason like network delay), received a good-bye message from server
             logger.debug(msg.getContent());
             /* to update cache or retry (reconnect) immediately
                here we update cache */

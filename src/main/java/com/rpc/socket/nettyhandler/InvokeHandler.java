@@ -29,6 +29,13 @@ public class InvokeHandler extends ChannelInboundHandlerAdapter {
     private static final Logger logger = Logger.getLogger(InvokeHandler.class);
 
 
+    @Override
+    public void channelActive(ChannelHandlerContext ctx) {
+        // here we can do some work on channel monitoring
+
+    }
+
+
     /**
      * message process and wrap result-related information into a instance of {@link ResponseImpl} to send
      *

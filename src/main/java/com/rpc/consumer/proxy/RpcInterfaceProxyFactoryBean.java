@@ -44,11 +44,6 @@ public class RpcInterfaceProxyFactoryBean<T> implements FactoryBean {
 
 
     private void checkCandidatesForItf() throws AppException {
-        if(!ServerInfo.isInit.get()){
-            logger.info("=============== begin to initialize local caches... ");
-            ServerInfo.refresh();
-            ServerInfo.isInit.compareAndSet(false,true);
-        }
         String itfName = itfClass.getName();
         if (!ServerInfo.isCandidatesSavedForItfMap.get(itfName)) {
             if(ServerInfo.itfServersMap.get(itfName).size() == 0){

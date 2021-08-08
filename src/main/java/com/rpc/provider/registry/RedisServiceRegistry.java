@@ -20,11 +20,8 @@ public class RedisServiceRegistry implements ServiceRegistry{
     private static final Logger logger = Logger.getLogger(RedisServiceRegistry.class);
 
     protected final JedisPool pool;
-    protected final ServerRpcConfig server;
 
-    public RedisServiceRegistry(){
-        RedisRegisterCenterConfig centerConfig = ServerRpcConfig.applicationContext.getBean(RedisRegisterCenterConfig.class);
-        server = ServerRpcConfig.applicationContext.getBean(ServerRpcConfig.class);
+    public RedisServiceRegistry(RedisRegisterCenterConfig centerConfig){
         pool = centerConfig.getJedisPool();
         init();
     }

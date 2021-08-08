@@ -127,18 +127,18 @@ public class ClientProxyInvocation implements InvocationHandler {
             String selectedServerInfo = selector.select(serverSet, request);
             Channel channel = ServerInfo.serverChannelMap.get(selectedServerInfo);
             /*
-             * TODO: could combine with RocketMQ ---> having retry
+             * TODO: could combine with -->  retry
              * here we diy using the method of self-polling
              */
             try {
-                if (channel == null) {
+                if (channel == null || !channel.isOpen()) {
                     logger.warn("== no open channel for server {" + selectedServerInfo + "}! will close this server candidate");
                     throw new AppException();
                 }
 
                 int num = Constant.REQUEST_RETRY_TIMES;
                 do {
-                    Thread.sleep(10);
+                    Thread.sleep(10);   // wait
                     if (num < 0) {
                         logger.warn("=== The channel {" + channel + "} is not active! will close this server candidate ===");
                         throw new AppException();

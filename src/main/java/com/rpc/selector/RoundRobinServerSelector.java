@@ -22,7 +22,7 @@ public class RoundRobinServerSelector extends AbstractSelector{
     private AtomicInteger index = new AtomicInteger();
 
     @Override
-    protected void preCheck() {
+    protected void prepare() {
 
     }
 

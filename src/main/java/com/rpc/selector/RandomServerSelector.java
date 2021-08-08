@@ -14,7 +14,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class RandomServerSelector extends AbstractSelector{
 
     @Override
-    protected void preCheck() {
+    protected void prepare() {
 
     }
 

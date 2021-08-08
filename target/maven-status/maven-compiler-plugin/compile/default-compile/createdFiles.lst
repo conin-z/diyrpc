@@ -9,10 +9,12 @@ com\rpc\socket\AbstractNettySocketConfig.class
 com\rpc\selector\AbstractSelector.class
 com\rpc\annotation\RpcReference.class
 com\rpc\utils\JsonUtil.class
+com\rpc\selector\ConsistentHashSelector$LocalSelector.class
 com\rpc\utils\KryoUtil.class
 com\rpc\provider\registry\ServiceRegistry.class
 com\rpc\socket\AbstractNettySocketConfig$1.class
 com\rpc\message\ResponseImpl.class
+com\rpc\selector\ConsistentHashSelector.class
 com\rpc\annotation\RpcService.class
 com\rpc\provider\registry\RedisServiceRegistry.class
 com\rpc\socket\nettyhandler\ClientJsonEncoder.class
@@ -32,6 +34,7 @@ com\rpc\timertask\StatusObserver.class
 com\rpc\consumer\proxy\ClientProxyInvocation.class
 com\rpc\management\RpcConfig.class
 com\rpc\timertask\AbstractTimerTask.class
+com\rpc\socket\ClientNettySocketConfig$1.class
 com\rpc\consumer\subscriber\RedisServiceSubscriber.class
 com\rpc\utils\StringUtil.class
 com\rpc\socket\nettyhandler\KryoEncoder.class

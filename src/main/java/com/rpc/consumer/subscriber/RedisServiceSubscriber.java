@@ -23,8 +23,7 @@ public class RedisServiceSubscriber implements ServiceSubscriber {
 
     protected final JedisPool pool;
 
-    public RedisServiceSubscriber() {
-        RedisRegisterCenterConfig centerConfig = ServerRpcConfig.applicationContext.getBean(RedisRegisterCenterConfig.class);
+    public RedisServiceSubscriber(RedisRegisterCenterConfig centerConfig) {
         pool = centerConfig.getJedisPool();
         init();
     }
